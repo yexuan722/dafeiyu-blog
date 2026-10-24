@@ -1,6 +1,3 @@
-markdown
-
-
 ---
 title: "我的第一篇文章"
 description: "一句话说清这篇讲什么，会显示在列表页"
@@ -22,3 +19,4 @@ draft: false
 
 ```python
 print("hello")
+```
