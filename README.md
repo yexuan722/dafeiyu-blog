@@ -1,11 +1,11 @@
-# yexuan.qzz.io
+# dafeiyu-blog · 大肥鱼的鱼塘
 
-Astro 静态博客。零后端、零数据库，构建产物直接托管在 Cloudflare Pages。
+[yexuan.qzz.io](https://yexuan.qzz.io) 的源码。Astro 静态博客，零后端、零数据库，
+构建产物托管在 Cloudflare Pages。
 
 ## 本地开发
 
 ```bash
-cd site
 pnpm install
 pnpm dev          # http://localhost:4321
 ```
@@ -13,14 +13,15 @@ pnpm dev          # http://localhost:4321
 ## 构建
 
 ```bash
-cd site
-pnpm build        # 输出到 site/dist/
+pnpm build        # 输出到 dist/
 pnpm preview      # 本地预览构建产物
 ```
 
+> 需要 Node ≥ 20.3 与 pnpm 11（已通过 `packageManager` 字段锁定）。
+
 ## 写文章
 
-在 `site/src/content/posts/` 下新建 `.md` 文件，文件名就是 URL 后缀。
+在 `src/content/posts/` 下新建 `.md` 文件，**文件名就是 URL 后缀**。
 
 ```yaml
 ---
@@ -32,55 +33,58 @@ draft: false        # true 则不会出现在站点和构建产物里
 ---
 ```
 
-## 部署到 Cloudflare Pages
+frontmatter 写错会直接让构建失败，这是故意的——省得线上才发现。
 
-### 方式 A：直传（最快）
+## 发布
+
+日常只需要一条：
 
 ```bash
-pnpm dlx wrangler pages deploy dist --project-name=yexuan-blog
+git push
 ```
 
-首次会打开浏览器做 OAuth 登录。之后每次改完内容，重新 `pnpm build` 再执行一次即可。
+Cloudflare Pages 连上这个仓库后会自动构建并上线。
 
-### 方式 B：连 Git 仓库（推荐，长期）
+### 首次在 Cloudflare 创建项目
 
-1. 把仓库推到 GitHub；
-2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git；
+1. Workers & Pages → Create → Pages → **Connect to Git**
+2. 选仓库 `yexuan722/dafeiyu-blog`
 3. 构建配置：
-   - Framework preset: `Astro`
-   - Build command: `pnpm build`
-   - Build output directory: `dist`
-   - Root directory: `site`
-4. 保存后每次 `git push` 自动部署。
 
-### 方式 C：拖拽上传
+   | 项 | 值 |
+   |---|---|
+   | Framework preset | `Astro` |
+   | Build command | `pnpm build` |
+   | Build output directory | `dist` |
+   | Root directory | 留空 |
 
-`pnpm build` 之后，把 `site/dist/` 整个文件夹拖进 Cloudflare Dashboard 的
-Pages「Direct Upload」区域即可。
+4. 保存并部署，先用 `*.pages.dev` 的地址验收
+5. 项目 → Custom domains → 添加 `yexuan.qzz.io`
 
-## 绑定自定义域名
+> 自定义域名同时只能挂在一个 Pages 项目上。先把旧项目里的 `yexuan.qzz.io`
+> 移除，再添加到新项目。
 
-Pages 项目 → Custom domains → 添加 `yexuan.qzz.io`。
+### 手动部署（备用）
 
-因为 `qzz.io` 这个 zone 已经托管在 Cloudflare，DNS 记录会自动创建，
-不需要手动加 CNAME。HTTPS 证书也会自动签发。
-
-如果用的是根域或需要重定向 `www`，在 Pages 的 Redirects 里另配。
+```powershell
+.\deploy.ps1      # 构建 + wrangler 直传
+```
 
 ## 目录结构
 
 ```
-site/
 ├── astro.config.mjs
 ├── public/                  # 原样拷贝到产物根目录
+│   ├── _headers             # Cloudflare 安全头与缓存策略
 │   └── favicon.svg
 └── src/
-    ├── content.config.ts    # 文章集合的 schema
+    ├── content.config.ts    # 文章集合 schema
     ├── content/posts/       # Markdown 文章
     ├── layouts/Base.astro   # 全站骨架
     ├── pages/
     │   ├── index.astro      # 首页列表
     │   ├── about.astro      # 关于
+    │   ├── 404.astro        # 自定义 404
     │   └── posts/[...slug].astro
     └── styles/global.css
 ```
@@ -88,5 +92,7 @@ site/
 ## 注意
 
 - `draft: true` 的文章不会进入构建产物，可以放心先提交。
-- 文章里不要写 API Key、本地绝对路径、内网信息 —— 发布前过一遍。
-- 构建产物在 `dist/`，已加入 `.gitignore`，不需要提交。
+- **发布前过一遍脱敏**：不要写 API Key、本地绝对路径、内网信息。
+- `dist/` 与 `node_modules/` 已在 `.gitignore` 里，不需要提交。
+- `pnpm-workspace.yaml` 里的 `allowBuilds` 是 pnpm 11 的新写法，别删——
+  删了 `pnpm install` 会以退出码 1 结束，CI 会直接失败。
