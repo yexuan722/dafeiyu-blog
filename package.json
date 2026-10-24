@@ -1,8 +1,12 @@
 {
-  "name": "yexuan-blog",
+  "name": "dafeiyu-blog",
   "type": "module",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@11.28.5",
+  "engines": {
+    "node": ">=20.3.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
