@@ -80,11 +80,13 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 │   ├── og.jpg               # 社交卡片图 1200×630
 │   ├── maid-loop.mp4        # 首页立绘循环视频（440×560 / 60fps / 635KB）
 │   ├── maid-poster.jpg      # 视频封面（省流、减少动效时显示）
-│   └── maid-still.webp      # 透明底静帧，给 404 / 关于页
+│   ├── maid-still.webp      # 透明底静帧，给 404 / 关于页
+│   └── whale/               # 看板娘：Live2D 模型 + 运行时（约 3.3MB，懒加载）
 └── src/
     ├── content.config.ts    # 文章集合 schema
     ├── content/posts/       # Markdown 文章
     ├── components/
+    │   ├── WhalePet.astro   # 看板娘（Cubism 4，pixi-live2d-display）
     │   └── TechBackground.astro  # 文章页粒子网络 + 鼠标互动
     ├── lib/post.ts          # 日期 / 阅读时长 / 排序 / 标签色相
     ├── layouts/Base.astro   # 全站骨架（variant: anime | tech）
@@ -131,39 +133,42 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
   **一个字节都不下载**，只显示封面图。
 - 滚出视口自动暂停，切回标签页再继续。
 
-## 看板娘（Live2D）
+## 看板娘（DeepSeek 鲸鱼娘）
 
-右下角那个会呼吸的是 Live2D（Cubism 2）。实现参考了
-[cnblogs 那篇 waifu.js 的文章](https://www.cnblogs.com/yjlaugus/p/8724881.html)，
-但那套 2018 年的方案（jQuery + bootcss CDN + 第三方 api）现在基本跑不动了，
-所以换成 `live2d-widget@3.1.4`，**运行时和模型全部自托管**，零外部请求：
+右下角坐在桌前那个是 Live2D（Cubism 4）。
+
+来源：[Andersen216/dsh-whale-girl-live2d](https://github.com/Andersen216/dsh-whale-girl-live2d)
+（代码 MIT）。形象链：**上善无形「溟月」→ ZipZipPipe 女仆鲸鱼娘 → 氵六青 绑定 Live2D**，
+素材按 **CC BY-NC-SA 4.0 非商业**使用，页脚保留署名。
 
 ```
-public/live2d/
-├── L2Dwidget.min.js        # 主入口 26KB
-├── L2Dwidget.0.min.js      # 懒加载 chunk 148KB
-├── rem.model.json          # 模型描述（指向下面的资源）
-├── remu.physics.json
-├── remu.pose.json
-├── moc/remu.moc            # 骨骼网格 322KB
-├── moc/remu2048/texture_00.webp   # 纹理：2048 PNG → 1024 WebP，604KB → 289KB
-└── motions/*.mtn           # 只留 idle + 8 个动作（原包 34 个）
+public/whale/
+├── pixi.min.js              # 460KB  PIXI v6
+├── live2dcubismcore.min.js  # 207KB  Live2D 官方 Cubism Core
+├── cubism4.min.js           # 120KB  pixi-live2d-display v0.4
+└── model/
+    ├── model3.json          # 自己写的：注册动作 + 6 个表情
+    ├── c_0120.moc3          # 2.1MB  骨骼（压不动）
+    ├── c_0120.physics3.json # 头发/尾巴物理
+    ├── textures/*.webp      # 1.8MB PNG → 386KB WebP（2048→1024）
+    ├── motions/*.motion3.json   # idle + 自拍/番茄酱/吹泡泡/喷水/开盖
+    └── expressions/*.exp3.json  # 开心/生气/脸红/星星眼/爱心眼/哭
 ```
 
-合计约 **900KB**，只在 `min-width: 900px` 且非 `prefers-reduced-motion` 时加载。
+合计约 **3.3MB**，只在 `min-width: 900px` 且非 `prefers-reduced-motion` 时懒加载。
 
-行为：
+实现要点：
 
-- `requestIdleCallback` 之后再插 script，不抢首屏带宽；
-- 点她一下会冒一句大肥鱼的台词（台词在 `Kanban.astro` 的 `TIPS` 数组里）；
-- 鼠标移上去才出现 ✕，关掉后写 `localStorage` 记住，不再打扰；
-- 宽屏时 `.to-top` 往左让 238px，避免和看板娘叠在一起。
+- 用 `requestIdleCallback` 之后再依次插 pixi → cubism core → cubism4，不抢首屏；
+- 人物在模型坐标系里只占下面一块，所以先用洋红底截图量出真实包围盒
+  （`ART = {x:567, y:369, w:3447, h:3148}`），再按这个盒子算缩放和偏移，
+  留 4% 边距防止动作幅度大时被切；
+- 鼠标移动时 `model.focus()` 让她看过来，离开归位；
+- 点一下：随机表情 + 随机动作 + 一句台词（台词在 `WhalePet.astro` 的 `TIPS` 里）；
+- 悬停才出现 ✕，关掉写 `localStorage`；切到后台 `app.ticker.stop()` 省电。
 
-换模型：把任意 `live2d-widget-model-*` 包里的 `assets/` 丢进 `public/live2d/`，
-改一下 `rem.model.json` 的路径（以及 `Kanban.astro` 里 `jsonPath`）即可。
-
-> 许可提醒：`live2d-widget` 是 GPL-2.0；Rem 这个模型是第三方制作的同人 Live2D，
-> 官方没给商用授权。个人博客玩玩没问题，真要商用得换自己画的模型。
+> 许可提醒：**非商业**。形象由 上善无形、ZipZipPipe、氵六青 以 CC BY-NC-SA 4.0 发布，
+> 页脚已署名。真要商用得换成自己画的模型，或者另找授权。
 
 ## 视觉约定
 

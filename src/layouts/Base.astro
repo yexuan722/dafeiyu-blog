@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import TechBackground from "../components/TechBackground.astro";
-import Kanban from "../components/Kanban.astro";
+import WhalePet from "../components/WhalePet.astro";
 
 interface Props {
   title?: string;
@@ -126,6 +126,9 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
 
     <footer class="site-footer">
       <p>© {new Date().getFullYear()} 大肥鱼的鱼塘 · 咕噜咕噜</p>
+      <p class="credit">
+        看板娘形象：上善无形 / ZipZipPipe / 氵六青 · CC BY-NC-SA 4.0
+      </p>
       <div class="links">
         <a href="https://github.com/yexuan722/dafeiyu-blog">源码</a>
         <a href="https://astro.build">Astro</a>
@@ -134,6 +137,6 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
       </div>
     </footer>
 
-    <Kanban />
+    <WhalePet />
   </body>
 </html>

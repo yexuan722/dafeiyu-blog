@@ -1184,6 +1184,12 @@ article img {
   margin: 0 0 6px;
 }
 
+.site-footer .credit {
+  font-size: 11.5px;
+  color: rgba(116, 129, 163, 0.8);
+  margin-bottom: 10px;
+}
+
 .site-footer .links {
   display: flex;
   justify-content: center;
