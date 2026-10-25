@@ -1,51 +1,98 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getCollection } from "astro:content";
+import Mascot from "../components/Mascot.astro";
+import { fmtDate, readingMinutes, getSortedPosts, allTags } from "../lib/post";
 
-const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
-
-const fmt = (d: Date) =>
-  new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(d)
-    .replace(/\//g, "-");
+const posts = await getSortedPosts();
+const tags = allTags(posts);
 ---
 
-<Base>
+<Base variant="anime">
   <section class="hero">
-    <h1>大肥鱼的鱼塘</h1>
-    <p>折腾笔记、AI 工具，以及一些还没想明白的问题。</p>
+    <div class="hero-text">
+      <span class="hero-badge">咕噜咕噜 · 正在营业</span>
+      <h1>大肥鱼的<span class="tint">鱼塘</span></h1>
+      <p class="hero-sub">
+        折腾 AI 工具时的笔记、踩过的坑，以及一些做完之后回头看觉得「早知道就记下来」的结论。
+        能复现的步骤才写，猜的部分会标出来。
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#posts">翻翻文章</a>
+        <a class="btn" href="/about/">这条鱼是谁</a>
+      </div>
+      <ul class="hero-stats">
+        <li>
+          <b>{posts.length}</b>
+          <span>篇文章</span>
+        </li>
+        <li>
+          <b>{tags.length}</b>
+          <span>个标签</span>
+        </li>
+        <li>
+          <b>0</b>
+          <span>行后端代码</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero-art">
+      <Mascot />
+      <div class="bubble">今天也要干饭！</div>
+      <i class="spark s1"></i>
+      <i class="spark s2"></i>
+      <i class="spark s3"></i>
+    </div>
   </section>
+
+  <div class="section-head" id="posts">
+    <h2>最近写的</h2>
+    <span class="hint">{posts.length} 篇 · 新的在上</span>
+  </div>
 
   <ul class="post-list">
     {
       posts.map((post) => (
-        <li>
-          <div class="date">{fmt(post.data.pubDate)}</div>
-          <h2>
-            <a href={`/posts/${post.id}/`}>{post.data.title}</a>
-          </h2>
-          {post.data.description && <p class="desc">{post.data.description}</p>}
-          {post.data.tags.length > 0 && (
-            <div class="tags">
-              {post.data.tags.map((t) => (
-                <span class="tag">{t}</span>
-              ))}
+        <li class="post-card">
+          <a href={`/posts/${post.id}/`}>
+            <div class="card-top">
+              <time datetime={post.data.pubDate.toISOString()}>
+                {fmtDate(post.data.pubDate)}
+              </time>
+              <i class="sep" />
+              <span>约 {readingMinutes(post.body)} 分钟</span>
             </div>
-          )}
+            <h2>{post.data.title}</h2>
+            {post.data.description && <p class="desc">{post.data.description}</p>}
+            {post.data.tags.length > 0 && (
+              <div class="tags">
+                {post.data.tags.map((t) => (
+                  <span class="tag">#{t}</span>
+                ))}
+              </div>
+            )}
+          </a>
         </li>
       ))
     }
   </ul>
 
   {
-    posts.length === 0 && (
-      <p style="color:var(--dim)">还一条鱼都没有，先投点鱼苗吧。</p>
-    )
+    posts.length === 0 && <p class="empty">还一条鱼都没有，先投点鱼苗吧。</p>
   }
 </Base>
+
+<script>
+  // 卡片跟随鼠标的高光
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (!reduce) {
+    for (const card of document.querySelectorAll<HTMLElement>(".post-card")) {
+      card.addEventListener("pointermove", (e) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+        card.style.setProperty("--my", `${e.clientY - rect.top}px`);
+      });
+    }
+  }
+</script>

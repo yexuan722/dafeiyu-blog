@@ -1,0 +1,263 @@
+---
+// 文章页背景：粒子网络 + 鼠标互动（连线 / 斥力 / 点击冲击波）
+// 纯 canvas，无依赖，支持 prefers-reduced-motion
+---
+
+<canvas id="tech-bg" aria-hidden="true"></canvas>
+
+<script>
+  const canvas = document.getElementById("tech-bg") as HTMLCanvasElement | null;
+
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let raf = 0;
+    let alive = true;
+
+    type Dot = { x: number; y: number; vx: number; vy: number; r: number };
+    let dots: Dot[] = [];
+
+    const pointer = { x: -9999, y: -9999, active: false };
+    const ripples: { x: number; y: number; r: number; life: number }[] = [];
+
+    const PALETTE = ["#4fd6ff", "#7cb0ff", "#a78bfa"];
+
+    function build() {
+      const count = Math.max(24, Math.min(96, Math.round((w * h) / 19000)));
+      dots = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.34,
+        vy: (Math.random() - 0.5) * 0.34,
+        r: Math.random() * 1.5 + 0.9,
+      }));
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas!.width = Math.round(w * dpr);
+      canvas!.height = Math.round(h * dpr);
+      canvas!.style.width = `${w}px`;
+      canvas!.style.height = `${h}px`;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+      if (reduce) drawStatic();
+    }
+
+    function drawStatic() {
+      ctx!.clearRect(0, 0, w, h);
+      for (const d of dots) {
+        ctx!.beginPath();
+        ctx!.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx!.fillStyle = "rgba(124,176,255,.55)";
+        ctx!.fill();
+      }
+    }
+
+    function frame() {
+      if (!alive) return;
+      ctx!.clearRect(0, 0, w, h);
+
+      const LINK = 132;
+      const REACH = 176;
+
+      // 更新
+      for (const d of dots) {
+        d.x += d.vx;
+        d.y += d.vy;
+
+        if (d.x < -20) d.x = w + 20;
+        if (d.x > w + 20) d.x = -20;
+        if (d.y < -20) d.y = h + 20;
+        if (d.y > h + 20) d.y = -20;
+
+        if (pointer.active) {
+          const dx = d.x - pointer.x;
+          const dy = d.y - pointer.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < REACH && dist > 0.001) {
+            const force = (1 - dist / REACH) * 0.9;
+            d.vx += (dx / dist) * force * 0.14;
+            d.vy += (dy / dist) * force * 0.14;
+          }
+        }
+
+        // 速度阻尼，避免越跑越快
+        d.vx *= 0.985;
+        d.vy *= 0.985;
+        const speed = Math.hypot(d.vx, d.vy);
+        if (speed > 2.4) {
+          d.vx = (d.vx / speed) * 2.4;
+          d.vy = (d.vy / speed) * 2.4;
+        }
+        // 保底漂移
+        if (speed < 0.08) {
+          d.vx += (Math.random() - 0.5) * 0.06;
+          d.vy += (Math.random() - 0.5) * 0.06;
+        }
+      }
+
+      // 点之间的连线
+      for (let i = 0; i < dots.length; i++) {
+        for (let j = i + 1; j < dots.length; j++) {
+          const a = dots[i]!;
+          const b = dots[j]!;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < LINK) {
+            const alpha = (1 - dist / LINK) * 0.34;
+            ctx!.strokeStyle = `rgba(124,176,255,${alpha.toFixed(3)})`;
+            ctx!.lineWidth = 1;
+            ctx!.beginPath();
+            ctx!.moveTo(a.x, a.y);
+            ctx!.lineTo(b.x, b.y);
+            ctx!.stroke();
+          }
+        }
+      }
+
+      // 鼠标连线
+      if (pointer.active) {
+        for (const d of dots) {
+          const dx = d.x - pointer.x;
+          const dy = d.y - pointer.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < REACH) {
+            const alpha = (1 - dist / REACH) * 0.75;
+            ctx!.strokeStyle = `rgba(79,214,255,${alpha.toFixed(3)})`;
+            ctx!.lineWidth = 1;
+            ctx!.beginPath();
+            ctx!.moveTo(pointer.x, pointer.y);
+            ctx!.lineTo(d.x, d.y);
+            ctx!.stroke();
+          }
+        }
+
+        const glow = ctx!.createRadialGradient(
+          pointer.x,
+          pointer.y,
+          0,
+          pointer.x,
+          pointer.y,
+          110,
+        );
+        glow.addColorStop(0, "rgba(79,214,255,.22)");
+        glow.addColorStop(1, "rgba(79,214,255,0)");
+        ctx!.fillStyle = glow;
+        ctx!.beginPath();
+        ctx!.arc(pointer.x, pointer.y, 110, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+
+      // 粒子
+      for (let i = 0; i < dots.length; i++) {
+        const d = dots[i]!;
+        ctx!.beginPath();
+        ctx!.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx!.fillStyle = PALETTE[i % PALETTE.length] + "aa";
+        ctx!.fill();
+      }
+
+      // 冲击波
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const rp = ripples[i]!;
+        rp.r += 9;
+        rp.life -= 0.028;
+        if (rp.life <= 0) {
+          ripples.splice(i, 1);
+          continue;
+        }
+        ctx!.beginPath();
+        ctx!.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+        ctx!.strokeStyle = `rgba(167,139,250,${(rp.life * 0.7).toFixed(3)})`;
+        ctx!.lineWidth = 2;
+        ctx!.stroke();
+      }
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (reduce) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      cancelAnimationFrame(raf);
+    }
+
+    window.addEventListener("resize", resize, { passive: true });
+
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
+        pointer.active = true;
+      },
+      { passive: true },
+    );
+
+    window.addEventListener("pointerleave", () => {
+      pointer.active = false;
+    });
+
+    window.addEventListener("blur", () => {
+      pointer.active = false;
+    });
+
+    window.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (reduce) return;
+        ripples.push({ x: e.clientX, y: e.clientY, r: 8, life: 1 });
+        for (const d of dots) {
+          const dx = d.x - e.clientX;
+          const dy = d.y - e.clientY;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 260 && dist > 0.001) {
+            const push = (1 - dist / 260) * 7;
+            d.vx += (dx / dist) * push;
+            d.vy += (dy / dist) * push;
+          }
+        }
+      },
+      { passive: true },
+    );
+
+    document.addEventListener("visibilitychange", () => {
+      alive = !document.hidden;
+      if (alive) start();
+      else stop();
+    });
+
+    resize();
+    start();
+  }
+</script>
+
+<style>
+  #tech-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #tech-bg {
+      opacity: 0.75;
+    }
+  }
+</style>

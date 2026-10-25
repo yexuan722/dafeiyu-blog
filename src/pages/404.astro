@@ -1,12 +1,20 @@
 ---
 import Base from "../layouts/Base.astro";
+import Mascot from "../components/Mascot.astro";
 ---
 
-<Base title="404" description="这条鱼游走了。">
-  <article style="padding-top:40px">
-    <div class="post-meta">404</div>
+<Base title="404" description="这条鱼游走了。" variant="anime">
+  <section class="page page-404">
+    <div class="big">404</div>
     <h1>这条鱼游走了</h1>
-    <p>你要找的页面不存在，可能是链接写错了，也可能是本鱼还没写完。</p>
-    <p><a href="/">回首页看看别的</a></p>
-  </article>
+    <p style="color:var(--dim);margin:0 auto 26px;max-width:26em">
+      你要找的页面不存在，可能是链接写错了，也可能是本鱼还没写完。
+    </p>
+    <p style="margin:0 0 18px">
+      <span style="display:inline-block;width:132px;opacity:.85">
+        <Mascot />
+      </span>
+    </p>
+    <a class="btn btn-primary" href="/">回首页看看别的</a>
+  </section>
 </Base>

@@ -76,18 +76,36 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 ├── astro.config.mjs
 ├── public/                  # 原样拷贝到产物根目录
 │   ├── _headers             # Cloudflare 安全头与缓存策略
-│   └── favicon.svg
+│   ├── favicon.svg
+│   └── og.jpg               # 社交卡片图 1200×630
 └── src/
     ├── content.config.ts    # 文章集合 schema
     ├── content/posts/       # Markdown 文章
-    ├── layouts/Base.astro   # 全站骨架
+    ├── components/
+    │   ├── Mascot.astro     # 首页那条鱼（纯手写 SVG，会眨眼）
+    │   └── TechBackground.astro  # 文章页粒子网络 + 鼠标互动
+    ├── lib/post.ts          # 日期/阅读时长/排序等小工具
+    ├── layouts/Base.astro   # 全站骨架（variant: anime | tech）
     ├── pages/
-    │   ├── index.astro      # 首页列表
+    │   ├── index.astro      # 首页：二次元立绘 + 文章卡片
     │   ├── about.astro      # 关于
     │   ├── 404.astro        # 自定义 404
-    │   └── posts/[...slug].astro
+    │   └── posts/[...slug].astro  # 正文 + 目录 + 阅读进度
     └── styles/global.css
 ```
+
+## 视觉约定
+
+两种页面氛围，由 `Base.astro` 的 `variant` 决定：
+
+| variant | 用在 | 表现 |
+|---|---|---|
+| `anime` | 首页、404 | 蓝紫光斑 + 星点，立绘、气泡、胶囊卡片 |
+| `tech` | 文章、关于 | 细网格 + canvas 粒子网络，鼠标靠近会连线、点击有冲击波 |
+
+正文面板在小屏上会关掉 `backdrop-filter`，避免「粒子动画 + 大面积模糊」掉帧。
+
+动效全部尊重 `prefers-reduced-motion`：系统开了减少动态效果，粒子和浮动都会停。
 
 ## 注意
 

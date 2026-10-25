@@ -1,0 +1,265 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<svg
+  class={`mascot ${className}`}
+  viewBox="0 30 440 452"
+  role="img"
+  aria-label="大肥鱼：蓝色的圆滚滚鱼鱼女仆，戴着白色荷叶头饰，端着冒尖的白米饭"
+>
+  <defs>
+    <radialGradient id="m-halo" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#7cb0ff" stop-opacity=".48"></stop>
+      <stop offset="52%" stop-color="#7cb0ff" stop-opacity=".12"></stop>
+      <stop offset="100%" stop-color="#7cb0ff" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="m-body" x1="20%" y1="4%" x2="80%" y2="96%">
+      <stop offset="0%" stop-color="#d6ecff"></stop>
+      <stop offset="40%" stop-color="#93c2f2"></stop>
+      <stop offset="100%" stop-color="#5789d2"></stop>
+    </linearGradient>
+    <linearGradient id="m-fin" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#c2e0fb"></stop>
+      <stop offset="100%" stop-color="#6a9cdd"></stop>
+    </linearGradient>
+    <linearGradient id="m-iris" x1="30%" y1="8%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#7adaff"></stop>
+      <stop offset="45%" stop-color="#2a7fd4"></stop>
+      <stop offset="100%" stop-color="#0e2f5c"></stop>
+    </linearGradient>
+    <linearGradient id="m-apron" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="100%" stop-color="#dfe9f6"></stop>
+    </linearGradient>
+    <linearGradient id="m-bowl" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e9f2fb"></stop>
+      <stop offset="60%" stop-color="#c4d7ec"></stop>
+      <stop offset="100%" stop-color="#9fb9d6"></stop>
+    </linearGradient>
+    <linearGradient id="m-rice" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="100%" stop-color="#e8eef7"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- 光晕 -->
+  <circle cx="220" cy="250" r="206" fill="url(#m-halo)"></circle>
+
+  <!-- 背景星点 -->
+  <g fill="#cfe6ff">
+    <path
+      d="M0-10Q2-2 10 0Q2 2 0 10Q-2 2-10 0Q-2-2 0-10Z"
+      transform="translate(54,204) scale(.8)"
+      opacity=".7"></path>
+    <path
+      d="M0-10Q2-2 10 0Q2 2 0 10Q-2 2-10 0Q-2-2 0-10Z"
+      transform="translate(390,244) scale(.62)"
+      opacity=".6"></path>
+    <path
+      d="M0-10Q2-2 10 0Q2 2 0 10Q-2 2-10 0Q-2-2 0-10Z"
+      transform="translate(332,56) scale(.5)"
+      opacity=".5"></path>
+    <circle cx="80" cy="292" r="2.6" opacity=".5"></circle>
+    <circle cx="400" cy="130" r="2.2" opacity=".45"></circle>
+  </g>
+
+  <!-- 尾鳍 -->
+  <path
+    d="M156 344C124 360 100 388 94 418C120 414 142 402 158 384Z"
+    fill="url(#m-fin)"
+    opacity=".92"></path>
+  <path
+    d="M284 344C316 360 340 388 346 418C320 414 298 402 282 384Z"
+    fill="url(#m-fin)"
+    opacity=".92"></path>
+
+  <!-- 呆毛 -->
+  <path
+    d="M216 108C208 76 232 54 254 48"
+    fill="none"
+    stroke="#4a7fd0"
+    stroke-width="11"
+    stroke-linecap="round"></path>
+  <path
+    d="M216 108C208 76 232 54 254 48"
+    fill="none"
+    stroke="#b6d9f8"
+    stroke-width="5.5"
+    stroke-linecap="round"></path>
+
+  <!-- 身体 -->
+  <ellipse cx="220" cy="238" rx="128" ry="136" fill="url(#m-body)"></ellipse>
+  <ellipse
+    cx="172"
+    cy="168"
+    rx="44"
+    ry="28"
+    fill="#ffffff"
+    opacity=".2"
+    transform="rotate(-24 172 168)"></ellipse>
+
+  <!-- 鱼鳍耳 -->
+  <path d="M118 206C96 188 78 176 60 182C68 204 84 222 108 234Z" fill="url(#m-fin)"></path>
+  <path d="M322 206C344 188 362 176 380 182C372 204 356 222 332 234Z" fill="url(#m-fin)"></path>
+
+  <!-- 女仆头饰 -->
+  <g fill="#ffffff">
+    <circle cx="151" cy="150" r="8.5"></circle>
+    <circle cx="174" cy="139" r="8.5"></circle>
+    <circle cx="197" cy="132" r="8.5"></circle>
+    <circle cx="220" cy="130" r="8.5"></circle>
+    <circle cx="243" cy="132" r="8.5"></circle>
+    <circle cx="266" cy="139" r="8.5"></circle>
+    <circle cx="289" cy="150" r="8.5"></circle>
+  </g>
+  <path
+    d="M128 172Q220 102 312 172"
+    fill="none"
+    stroke="#eaf1fb"
+    stroke-width="13"
+    stroke-linecap="round"></path>
+
+  <!-- 蝴蝶结 -->
+  <g transform="translate(308,170) rotate(-22)">
+    <path d="M0 0L-19-9L-19 9Z" fill="#ffa8cf"></path>
+    <path d="M0 0L19-9L19 9Z" fill="#ffa8cf"></path>
+    <circle cx="0" cy="0" r="4.8" fill="#ffc6de"></circle>
+  </g>
+
+  <!-- 眼睛 -->
+  <g class="mascot-eyes" style="transform-box: fill-box; transform-origin: center;">
+    <path
+      d="M154 188Q176 178 198 186"
+      fill="none"
+      stroke="#4a7fd0"
+      stroke-width="4"
+      stroke-linecap="round"
+      opacity=".7"></path>
+    <path
+      d="M242 186Q264 178 286 188"
+      fill="none"
+      stroke="#4a7fd0"
+      stroke-width="4"
+      stroke-linecap="round"
+      opacity=".7"></path>
+
+    <ellipse cx="176" cy="222" rx="20" ry="26" fill="url(#m-iris)"></ellipse>
+    <ellipse cx="264" cy="222" rx="20" ry="26" fill="url(#m-iris)"></ellipse>
+    <ellipse cx="176" cy="226" rx="10.5" ry="15" fill="#0c1a2e" opacity=".62"></ellipse>
+    <ellipse cx="264" cy="226" rx="10.5" ry="15" fill="#0c1a2e" opacity=".62"></ellipse>
+    <circle cx="167" cy="211" r="7.5" fill="#ffffff"></circle>
+    <circle cx="255" cy="211" r="7.5" fill="#ffffff"></circle>
+    <circle cx="185" cy="236" r="3.8" fill="#ffffff" opacity=".75"></circle>
+    <circle cx="273" cy="236" r="3.8" fill="#ffffff" opacity=".75"></circle>
+
+    <path
+      d="M156 216Q176 190 197 218"
+      fill="none"
+      stroke="#16243c"
+      stroke-width="5"
+      stroke-linecap="round"></path>
+    <path
+      d="M243 218Q264 190 284 216"
+      fill="none"
+      stroke="#16243c"
+      stroke-width="5"
+      stroke-linecap="round"></path>
+  </g>
+
+  <!-- 腮红 -->
+  <ellipse cx="144" cy="258" rx="17" ry="9" fill="#ff9ec4" opacity=".45"></ellipse>
+  <ellipse cx="296" cy="258" rx="17" ry="9" fill="#ff9ec4" opacity=".45"></ellipse>
+
+  <!-- 嘴 -->
+  <path
+    d="M204 272Q212 283 220 272Q228 283 236 272"
+    fill="none"
+    stroke="#16243c"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"></path>
+
+  <!-- 女仆领口 -->
+  <path
+    d="M148 320Q220 288 292 320"
+    fill="none"
+    stroke="#f4f8ff"
+    stroke-width="11"
+    stroke-linecap="round"></path>
+  <path
+    d="M156 331Q220 302 284 331"
+    fill="none"
+    stroke="#d3dfee"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    opacity=".9"></path>
+
+  <!-- 手臂 -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M140 330C124 360 138 392 166 406" stroke="#4a7fd0" stroke-width="21"></path>
+    <path d="M300 330C316 360 302 392 274 406" stroke="#4a7fd0" stroke-width="21"></path>
+    <path d="M140 330C124 360 138 392 166 406" stroke="#9cc6f2" stroke-width="11"></path>
+    <path d="M300 330C316 360 302 392 274 406" stroke="#9cc6f2" stroke-width="11"></path>
+  </g>
+
+  <!-- 蒸汽 -->
+  <g fill="none" stroke="#dbebfd" stroke-width="4" stroke-linecap="round" opacity=".65">
+    <path d="M198 340C190 326 206 318 198 302"></path>
+    <path d="M242 336C234 322 250 314 242 298"></path>
+  </g>
+
+  <!-- 冒尖的米饭 -->
+  <path
+    d="M169 400C173 384 187 360 220 354C253 360 267 384 271 400Z"
+    fill="url(#m-rice)"
+    stroke="#ccd8e8"
+    stroke-width="1.6"></path>
+  <g fill="none" stroke="#dbe4f1" stroke-width="1.6" opacity=".95">
+    <path d="M196 392C200 376 208 364 216 360"></path>
+    <path d="M236 394C234 378 228 366 224 362"></path>
+    <path d="M212 398C214 384 218 372 220 366"></path>
+  </g>
+
+  <!-- 碗 -->
+  <path
+    d="M166 404C170 434 184 452 220 458C256 452 270 434 274 404Z"
+    fill="url(#m-bowl)"
+    stroke="#8fa8c6"
+    stroke-width="1.8"></path>
+  <path
+    d="M174 422C196 432 244 432 266 422"
+    fill="none"
+    stroke="#6a9cdd"
+    stroke-width="4"
+    opacity=".5"></path>
+  <ellipse
+    cx="220"
+    cy="404"
+    rx="54"
+    ry="7.5"
+    fill="#f7fbff"
+    stroke="#8fa8c6"
+    stroke-width="1.6"></ellipse>
+
+  <!-- 领口小蝴蝶结 -->
+  <g transform="translate(220,318) scale(.72)">
+    <path d="M0 0L-17-8L-17 8Z" fill="#ffa8cf"></path>
+    <path d="M0 0L17-8L17 8Z" fill="#ffa8cf"></path>
+    <circle cx="0" cy="0" r="4.4" fill="#ffc6de"></circle>
+  </g>
+
+  <!-- 手握碗沿 -->
+  <circle cx="167" cy="404" r="9" fill="#9cc6f2" stroke="#4a7fd0" stroke-width="2.4"></circle>
+  <circle cx="273" cy="404" r="9" fill="#9cc6f2" stroke="#4a7fd0" stroke-width="2.4"></circle>
+
+  <!-- 前景爱心 -->
+  <g transform="translate(354,114) rotate(-14) scale(.42)" opacity=".9">
+    <path
+      d="M0-16C5-26 20-26 20-12C20 0 6 8 0 16C-6 8-20 0-20-12C-20-26-5-26 0-16Z"
+      fill="#ffa8cf"></path>
+  </g>
+</svg>

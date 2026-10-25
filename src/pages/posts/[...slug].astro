@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getCollection, render } from "astro:content";
+import { fmtDate, readingMinutes } from "../../lib/post";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts", ({ data }) => !data.draft);
@@ -13,29 +14,127 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 
-const fmt = (d: Date) =>
-  new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(d)
-    .replace(/\//g, "-");
-
-const plain = (post.body ?? "").replace(/[#*`>\-\|]/g, "");
-const minutes = Math.max(1, Math.round(plain.length / 450));
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
-<Base title={post.data.title} description={post.data.description}>
-  <article>
-    <div class="post-meta">
-      <time datetime={post.data.pubDate.toISOString()}>{fmt(post.data.pubDate)}</time>
-      · 约 {minutes} 分钟读完
-      {post.data.tags.map((t) => <span class="tag">{t}</span>)}
-    </div>
+<Base
+  title={post.data.title}
+  description={post.data.description}
+  variant="tech"
+  wide
+>
+  <div class="post-grid">
+    <article class="post">
+      <div class="post-meta">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {fmtDate(post.data.pubDate)}
+        </time>
+        <i class="sep"></i>
+        <span>约 {readingMinutes(post.body)} 分钟读完</span>
+        {post.data.tags.map((t) => <span class="tag">#{t}</span>)}
+      </div>
 
-    <h1>{post.data.title}</h1>
+      <h1>{post.data.title}</h1>
 
-    <Content />
-  </article>
+      <div class="post-body">
+        <Content />
+      </div>
+    </article>
+
+    {
+      toc.length > 1 && (
+        <aside class="toc" aria-label="文章目录">
+          <p class="toc-title">目录</p>
+          <ul>
+            {toc.map((h) => (
+              <li class={`depth-${h.depth}`}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </div>
 </Base>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+<button class="to-top" type="button" aria-label="回到顶部">↑</button>
+
+<script>
+  const bar = document.querySelector<HTMLElement>(".progress span");
+  const toTop = document.querySelector<HTMLButtonElement>(".to-top");
+
+  if (bar) {
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const total = doc.scrollHeight - window.innerHeight;
+      const ratio = total > 0 ? window.scrollY / total : 0;
+      bar.style.width = `${Math.min(100, Math.max(0, ratio * 100)).toFixed(2)}%`;
+
+      if (toTop) toTop.classList.toggle("show", window.scrollY > 520);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  toTop?.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // 目录高亮
+  const links = [...document.querySelectorAll<HTMLAnchorElement>(".toc a")];
+
+  if (links.length > 0) {
+    const targets = links
+      .map((a) => {
+        const id = decodeURIComponent(a.hash.slice(1));
+        return document.getElementById(id);
+      })
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    const active = new Map<Element, HTMLAnchorElement>();
+    targets.forEach((el, i) => active.set(el, links[i]!));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const link = active.get(entry.target);
+          if (!link) continue;
+          for (const a of links) a.classList.remove("active");
+          link.classList.add("active");
+        }
+      },
+      { rootMargin: "-88px 0px -72% 0px", threshold: 0 },
+    );
+
+    for (const el of targets) observer.observe(el);
+  }
+
+  // 代码块复制
+  for (const pre of document.querySelectorAll<HTMLPreElement>(".post-body pre")) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "copy-btn";
+    btn.textContent = "复制";
+
+    btn.addEventListener("click", async () => {
+      const code = pre.querySelector("code")?.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(code);
+        btn.textContent = "已复制";
+        btn.classList.add("done");
+      } catch {
+        btn.textContent = "复制失败";
+      }
+      setTimeout(() => {
+        btn.textContent = "复制";
+        btn.classList.remove("done");
+      }, 1600);
+    });
+
+    pre.appendChild(btn);
+  }
+</script>
