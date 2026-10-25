@@ -27,3 +27,37 @@ export async function getSortedPosts(): Promise<Post[]> {
 export function allTags(posts: Post[]): string[] {
   return [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 }
+
+export interface TagCount {
+  tag: string;
+  count: number;
+  hue: number;
+}
+
+/** 同一个标签永远得到同一个色相，颜色不会随构建顺序漂移 */
+export function tagHue(tag: string): number {
+  let h = 0;
+  for (const ch of tag) h = (h * 31 + (ch.codePointAt(0) ?? 0)) % 360;
+  return h;
+}
+
+export function tagCounts(posts: Post[]): TagCount[] {
+  const map = new Map<string, number>();
+  for (const p of posts) {
+    for (const t of p.data.tags) map.set(t, (map.get(t) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([tag, count]) => ({ tag, count, hue: tagHue(tag) }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "zh-CN"));
+}
+
+/** 去掉 markdown 痕迹，给搜索索引和摘要用 */
+export function plainText(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#>*_`|~\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}

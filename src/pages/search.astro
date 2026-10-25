@@ -1,0 +1,220 @@
+---
+import Base from "../layouts/Base.astro";
+import { getSortedPosts } from "../lib/post";
+
+const posts = await getSortedPosts();
+---
+
+<Base
+  variant="anime"
+  active="search"
+  title="搜索"
+  description="搜大肥鱼鱼塘里的文章标题、正文和标签。"
+>
+  <section class="page-block">
+    <p class="eyebrow">搜索</p>
+    <h1 class="page-title">找点东西</h1>
+    <p class="page-desc">
+      标题、摘要、正文、标签一起搜，多个关键词用空格隔开（要全部命中）。
+    </p>
+
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"></circle>
+        <path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <input
+        id="q"
+        type="search"
+        placeholder="试试「Harness」「API」「标签」…"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="搜索关键词"
+      />
+      <kbd>/</kbd>
+    </div>
+
+    <p class="filter-status" id="status">共 {posts.length} 篇，输入关键词开始</p>
+
+    <ul class="result-list" id="results"></ul>
+
+    <p class="filter-empty" id="empty" hidden>没搜到…换个词试试？</p>
+
+    <noscript>
+      <p class="filter-empty">
+        搜索需要 JavaScript。你也可以先去 <a href="/tags/">标签页</a> 翻翻。
+      </p>
+    </noscript>
+  </section>
+</Base>
+
+<script>
+  interface Doc {
+    id: string;
+    title: string;
+    description: string;
+    tags: string[];
+    date: string;
+    minutes: number;
+    body: string;
+  }
+
+  const input = document.getElementById("q") as HTMLInputElement | null;
+  const results = document.getElementById("results");
+  const status = document.getElementById("status");
+  const empty = document.getElementById("empty");
+
+  let docs: Doc[] = [];
+  let loaded = false;
+
+  const esc = (s: string) =>
+    s.replace(
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c,
+    );
+
+  function highlight(text: string, terms: string[]): string {
+    const safe = esc(text);
+    if (terms.length === 0) return safe;
+    const pattern = terms
+      .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .filter(Boolean)
+      .join("|");
+    if (!pattern) return safe;
+    return safe.replace(new RegExp(`(${pattern})`, "gi"), "<mark>$1</mark>");
+  }
+
+  function excerpt(body: string, terms: string[]): string {
+    if (body.length <= 120) return body;
+    let at = -1;
+    for (const t of terms) {
+      const i = body.toLowerCase().indexOf(t.toLowerCase());
+      if (i >= 0 && (at < 0 || i < at)) at = i;
+    }
+    if (at < 0) return `${body.slice(0, 110)}…`;
+    const start = Math.max(0, at - 40);
+    const end = Math.min(body.length, start + 120);
+    return `${start > 0 ? "…" : ""}${body.slice(start, end)}${
+      end < body.length ? "…" : ""
+    }`;
+  }
+
+  function score(doc: Doc, terms: string[]): number {
+    const title = doc.title.toLowerCase();
+    const desc = doc.description.toLowerCase();
+    const tags = doc.tags.join(" ").toLowerCase();
+    const body = doc.body.toLowerCase();
+
+    let total = 0;
+    for (const t of terms) {
+      const q = t.toLowerCase();
+      let hit = false;
+      if (title.includes(q)) {
+        total += 8;
+        hit = true;
+      }
+      if (tags.includes(q)) {
+        total += 5;
+        hit = true;
+      }
+      if (desc.includes(q)) {
+        total += 3;
+        hit = true;
+      }
+      if (body.includes(q)) {
+        total += 2;
+        hit = true;
+      }
+      if (!hit) return 0;
+    }
+    return total;
+  }
+
+  function render(terms: string[]) {
+    if (!results || !status) return;
+
+    const query = terms.join(" ").trim();
+    const matched =
+      terms.length === 0
+        ? docs
+        : docs
+            .map((doc) => ({ doc, s: score(doc, terms) }))
+            .filter((x) => x.s > 0)
+            .sort((a, b) => b.s - a.s || b.doc.date.localeCompare(a.doc.date))
+            .map((x) => x.doc);
+
+    results.innerHTML = matched
+      .map((doc) => {
+        const tags = doc.tags
+          .map((t) => `<span class="tag">#${esc(t)}</span>`)
+          .join("");
+        // 正文里有命中就摘正文，否则用摘要
+        const bodyHit = terms.some((t) =>
+          doc.body.toLowerCase().includes(t.toLowerCase()),
+        );
+        return `<li class="result">
+          <a href="/posts/${doc.id}/">
+            <div class="result-top">
+              <time datetime="${doc.date}">${doc.date}</time>
+              <i class="sep"></i>
+              <span>约 ${doc.minutes} 分钟</span>
+            </div>
+            <h2>${highlight(doc.title, terms)}</h2>
+            <p class="result-desc">${highlight(
+              excerpt(bodyHit ? doc.body : doc.description || doc.body, terms),
+              terms,
+            )}</p>
+            <div class="tags">${tags}</div>
+          </a>
+        </li>`;
+      })
+      .join("");
+
+    status.textContent = query
+      ? `「${query}」命中 ${matched.length} 篇`
+      : `共 ${docs.length} 篇，输入关键词开始`;
+
+    if (empty) empty.hidden = matched.length > 0;
+
+    const url = new URL(location.href);
+    if (query) url.searchParams.set("q", query);
+    else url.searchParams.delete("q");
+    history.replaceState(null, "", url);
+  }
+
+  async function ensureDocs() {
+    if (loaded) return;
+    const res = await fetch("/search.json");
+    docs = await res.json();
+    loaded = true;
+  }
+
+  let timer = 0;
+
+  async function run() {
+    await ensureDocs();
+    const terms = (input?.value ?? "").trim().split(/\s+/).filter(Boolean);
+    render(terms);
+  }
+
+  input?.addEventListener("input", () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(run, 120);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== input) {
+      e.preventDefault();
+      input?.focus();
+      input?.select();
+    }
+    if (e.key === "Escape" && document.activeElement === input) {
+      if (input) input.value = "";
+      run();
+    }
+  });
+
+  const initial = new URLSearchParams(location.search).get("q") ?? "";
+  if (input) input.value = initial;
+  run();
+</script>

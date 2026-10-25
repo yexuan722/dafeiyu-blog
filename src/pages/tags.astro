@@ -1,0 +1,108 @@
+---
+import Base from "../layouts/Base.astro";
+import { fmtDate, readingMinutes, getSortedPosts, tagCounts } from "../lib/post";
+
+const posts = await getSortedPosts();
+const tags = tagCounts(posts);
+---
+
+<Base
+  variant="anime"
+  active="tags"
+  title="标签"
+  description="按标签筛选大肥鱼鱼塘里的文章。"
+>
+  <section class="page-block">
+    <p class="eyebrow">标签</p>
+    <h1 class="page-title">按标签翻</h1>
+    <p class="page-desc">点一个标签，下面只剩跟它有关的。再点一次回去。</p>
+
+    <div class="tag-cloud" role="group" aria-label="标签筛选">
+      <button class="tag-pill is-active" type="button" data-tag="" style="--h:214">
+        全部<span class="n">{posts.length}</span>
+      </button>
+      {
+        tags.map((t) => (
+          <button
+            class="tag-pill"
+            type="button"
+            data-tag={t.tag}
+            style={`--h:${t.hue};--n:${t.count}`}
+          >
+            {t.tag}
+            <span class="n">{t.count}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <p class="filter-status" id="status">共 {posts.length} 篇</p>
+
+    <ul class="post-list" id="list">
+      {
+        posts.map((post) => (
+          <li class="post-card" data-post data-tags={post.data.tags.join("|")}>
+            <a href={`/posts/${post.id}/`}>
+              <div class="card-top">
+                <time datetime={post.data.pubDate.toISOString()}>
+                  {fmtDate(post.data.pubDate)}
+                </time>
+                <i class="sep" />
+                <span>约 {readingMinutes(post.body)} 分钟</span>
+              </div>
+              <h2>{post.data.title}</h2>
+              {post.data.description && <p class="desc">{post.data.description}</p>}
+              {post.data.tags.length > 0 && (
+                <div class="tags">
+                  {post.data.tags.map((t) => (
+                    <span class="tag">#{t}</span>
+                  ))}
+                </div>
+              )}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="filter-empty" id="empty" hidden>这个标签下面还空着，等本鱼写。</p>
+  </section>
+</Base>
+
+<script>
+  const pills = [...document.querySelectorAll<HTMLButtonElement>(".tag-pill")];
+  const cards = [...document.querySelectorAll<HTMLElement>("[data-post]")];
+  const status = document.getElementById("status");
+  const empty = document.getElementById("empty");
+
+  function apply(tag: string) {
+    let shown = 0;
+
+    for (const card of cards) {
+      const tags = (card.dataset.tags ?? "").split("|");
+      const visible = !tag || tags.includes(tag);
+      card.hidden = !visible;
+      if (visible) shown += 1;
+    }
+
+    if (status) {
+      status.textContent = tag ? `「${tag}」共 ${shown} 篇` : `共 ${shown} 篇`;
+    }
+    if (empty) empty.hidden = shown > 0;
+
+    for (const pill of pills) {
+      pill.classList.toggle("is-active", (pill.dataset.tag ?? "") === tag);
+    }
+
+    const url = new URL(location.href);
+    if (tag) url.searchParams.set("tag", tag);
+    else url.searchParams.delete("tag");
+    history.replaceState(null, "", url);
+  }
+
+  for (const pill of pills) {
+    pill.addEventListener("click", () => apply(pill.dataset.tag ?? ""));
+  }
+
+  apply(new URLSearchParams(location.search).get("tag") ?? "");
+</script>

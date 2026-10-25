@@ -7,7 +7,7 @@ const posts = await getSortedPosts();
 const tags = allTags(posts);
 ---
 
-<Base variant="anime">
+<Base variant="anime" active="posts">
   <section class="hero">
     <div class="hero-text">
       <span class="hero-badge">咕噜咕噜 · 正在营业</span>
@@ -18,7 +18,7 @@ const tags = allTags(posts);
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#posts">翻翻文章</a>
-        <a class="btn" href="/about/">这条鱼是谁</a>
+        <a class="btn" href="/tags/">按标签找</a>
       </div>
       <ul class="hero-stats">
         <li>
@@ -39,9 +39,6 @@ const tags = allTags(posts);
     <div class="hero-art">
       <Mascot />
       <div class="bubble">今天也要干饭！</div>
-      <i class="spark s1"></i>
-      <i class="spark s2"></i>
-      <i class="spark s3"></i>
     </div>
   </section>
 
@@ -83,7 +80,6 @@ const tags = allTags(posts);
 </Base>
 
 <script>
-  // 卡片跟随鼠标的高光
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   if (!reduce) {
