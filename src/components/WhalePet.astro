@@ -263,6 +263,14 @@
     }
     if (off || window.innerWidth < 900) return;
 
+    // 模型 3.3MB，省流模式 / 2G 就别下了
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    if (conn?.saveData === true || /(^|-)2g$/.test(conn?.effectiveType ?? "")) return;
+
     // 按视口比例定尺寸，宽屏大一点
     const w = Math.round(Math.max(180, Math.min(240, window.innerWidth * 0.17)));
     const h = Math.round(w * 0.909);
