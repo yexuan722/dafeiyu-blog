@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import TechBackground from "../components/TechBackground.astro";
+import Kanban from "../components/Kanban.astro";
 
 interface Props {
   title?: string;
@@ -132,5 +133,7 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
         <a href="/about/">关于</a>
       </div>
     </footer>
+
+    <Kanban />
   </body>
 </html>

@@ -131,6 +131,40 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
   **一个字节都不下载**，只显示封面图。
 - 滚出视口自动暂停，切回标签页再继续。
 
+## 看板娘（Live2D）
+
+右下角那个会呼吸的是 Live2D（Cubism 2）。实现参考了
+[cnblogs 那篇 waifu.js 的文章](https://www.cnblogs.com/yjlaugus/p/8724881.html)，
+但那套 2018 年的方案（jQuery + bootcss CDN + 第三方 api）现在基本跑不动了，
+所以换成 `live2d-widget@3.1.4`，**运行时和模型全部自托管**，零外部请求：
+
+```
+public/live2d/
+├── L2Dwidget.min.js        # 主入口 26KB
+├── L2Dwidget.0.min.js      # 懒加载 chunk 148KB
+├── rem.model.json          # 模型描述（指向下面的资源）
+├── remu.physics.json
+├── remu.pose.json
+├── moc/remu.moc            # 骨骼网格 322KB
+├── moc/remu2048/texture_00.webp   # 纹理：2048 PNG → 1024 WebP，604KB → 289KB
+└── motions/*.mtn           # 只留 idle + 8 个动作（原包 34 个）
+```
+
+合计约 **900KB**，只在 `min-width: 900px` 且非 `prefers-reduced-motion` 时加载。
+
+行为：
+
+- `requestIdleCallback` 之后再插 script，不抢首屏带宽；
+- 点她一下会冒一句大肥鱼的台词（台词在 `Kanban.astro` 的 `TIPS` 数组里）；
+- 鼠标移上去才出现 ✕，关掉后写 `localStorage` 记住，不再打扰；
+- 宽屏时 `.to-top` 往左让 238px，避免和看板娘叠在一起。
+
+换模型：把任意 `live2d-widget-model-*` 包里的 `assets/` 丢进 `public/live2d/`，
+改一下 `rem.model.json` 的路径（以及 `Kanban.astro` 里 `jsonPath`）即可。
+
+> 许可提醒：`live2d-widget` 是 GPL-2.0；Rem 这个模型是第三方制作的同人 Live2D，
+> 官方没给商用授权。个人博客玩玩没问题，真要商用得换自己画的模型。
+
 ## 视觉约定
 
 一套配色，两种氛围，靠 `Base.astro` 的 `variant` 切换：
