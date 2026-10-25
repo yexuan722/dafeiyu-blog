@@ -69,7 +69,9 @@ body {
 .scene {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  /* 负层级：既在内容后面，又不会把内容隔成新的 stacking context
+     （首页视频要用 mix-blend-mode 和背景混合） */
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -135,12 +137,11 @@ body {
   }
 }
 
-/* 内容浮在场景之上 */
+/* 内容浮在场景之上；这里不给 z-index，避免形成 stacking context */
 .site-header,
 .wrap,
 .site-footer {
   position: relative;
-  z-index: 1;
 }
 
 /* ---------- 通用排版 ---------- */
@@ -382,13 +383,34 @@ a:hover {
   align-items: flex-end;
 }
 
-.hero-art .mascot {
+/* 立绘视频：黑底靠 screen 混合吃掉，等于自带透明通道 */
+.hero-art .maid-video {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 340px;
   height: auto;
   display: block;
+  mix-blend-mode: screen;
   animation: bob 7s ease-in-out infinite;
-  filter: drop-shadow(0 26px 40px rgba(80, 140, 240, 0.26));
+}
+
+.maid-glow {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  width: 96%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(110, 160, 232, 0.24),
+    rgba(110, 160, 232, 0.08) 55%,
+    transparent 74%
+  );
+  z-index: 0;
+  pointer-events: none;
 }
 
 @keyframes bob {
@@ -399,6 +421,15 @@ a:hover {
   50% {
     transform: translateY(-13px) rotate(1.2deg);
   }
+}
+
+.hero-art .mascot {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: block;
+  animation: bob 7s ease-in-out infinite;
+  filter: drop-shadow(0 26px 40px rgba(80, 140, 240, 0.26));
 }
 
 .mascot-eyes {
@@ -1421,8 +1452,9 @@ mark {
     order: -1;
   }
 
-  .hero-art .mascot {
-    max-width: 240px;
+  .hero-art .mascot,
+  .hero-art .maid-video {
+    max-width: 250px;
   }
 
   .hero-sub {
@@ -1519,6 +1551,7 @@ mark {
   .scene--anime::before,
   .scene--anime::after,
   .hero-art .mascot,
+  .hero-art .maid-video,
   .bubble,
   .ch-hair-back,
   .ch-lock,

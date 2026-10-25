@@ -1,6 +1,5 @@
 ---
 import Base from "../layouts/Base.astro";
-import Mascot from "../components/Mascot.astro";
 ---
 
 <Base title="404" description="这条鱼游走了。" variant="anime">
@@ -11,9 +10,13 @@ import Mascot from "../components/Mascot.astro";
       你要找的页面不存在，可能是链接写错了，也可能是本鱼还没写完。
     </p>
     <p style="margin:0 0 18px">
-      <span style="display:inline-block;width:132px;opacity:.85">
-        <Mascot />
-      </span>
+      <img
+        src="/maid-still.webp"
+        width="260"
+        height="330"
+        alt="大肥鱼立绘"
+        style="width:132px;height:auto;opacity:.85"
+      />
     </p>
     <a class="btn btn-primary" href="/">回首页看看别的</a>
   </section>

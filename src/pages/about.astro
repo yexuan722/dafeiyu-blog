@@ -1,6 +1,5 @@
 ---
 import Base from "../layouts/Base.astro";
-import Mascot from "../components/Mascot.astro";
 ---
 
 <Base title="关于" description="这个站是干什么的，以及它是怎么长出来的。" variant="tech" active="about">
@@ -63,9 +62,13 @@ import Mascot from "../components/Mascot.astro";
     </p>
 
     <p style="margin-top:38px;text-align:center">
-      <span style="display:inline-block;width:96px;opacity:.9">
-        <Mascot />
-      </span>
+      <img
+        src="/maid-still.webp"
+        width="260"
+        height="330"
+        alt="大肥鱼立绘"
+        style="width:110px;height:auto;opacity:.9"
+      />
     </p>
   </article>
 </Base>

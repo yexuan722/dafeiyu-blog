@@ -1,6 +1,5 @@
 ---
 import Base from "../layouts/Base.astro";
-import Mascot from "../components/Mascot.astro";
 import { fmtDate, readingMinutes, getSortedPosts, allTags } from "../lib/post";
 
 const posts = await getSortedPosts();
@@ -37,7 +36,21 @@ const tags = allTags(posts);
     </div>
 
     <div class="hero-art">
-      <Mascot />
+      <span class="maid-glow" aria-hidden="true"></span>
+      <video
+        class="maid-video"
+        id="maid-video"
+        poster="/maid-poster.jpg"
+        width="440"
+        height="560"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-label="大肥鱼立绘：头发、裙摆和鲸鱼尾缓慢摆动"
+      >
+        <source src="/maid-loop.mp4" type="video/mp4" />
+      </video>
       <div class="bubble">今天也要干饭！</div>
     </div>
   </section>
@@ -88,6 +101,46 @@ const tags = allTags(posts);
         const rect = card.getBoundingClientRect();
         card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
         card.style.setProperty("--my", `${e.clientY - rect.top}px`);
+      });
+    }
+  }
+
+  // ---- 首页立绘视频 ----
+  const video = document.getElementById("maid-video") as HTMLVideoElement | null;
+
+  if (video) {
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    const slow =
+      conn?.saveData === true || /(^|-)2g$/.test(conn?.effectiveType ?? "");
+
+    if (reduce || slow) {
+      // 省流 / 减少动态效果：保持 preload="none"，只显示封面图，视频一个字节都不下载
+    } else {
+      let wanted = true;
+      const play = () => {
+        if (wanted) video.play().catch(() => {});
+      };
+
+      video.preload = "auto";
+      play();
+
+      // 滚出视口就暂停，省电
+      new IntersectionObserver(
+        (entries) => {
+          wanted = entries[0]?.isIntersecting ?? true;
+          if (wanted) play();
+          else video.pause();
+        },
+        { threshold: 0.05 },
+      ).observe(video);
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) video.pause();
+        else play();
       });
     }
   }

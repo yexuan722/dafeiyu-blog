@@ -77,17 +77,19 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 ├── public/                  # 原样拷贝到产物根目录
 │   ├── _headers             # Cloudflare 安全头与缓存策略
 │   ├── favicon.svg
-│   └── og.jpg               # 社交卡片图 1200×630
+│   ├── og.jpg               # 社交卡片图 1200×630
+│   ├── maid-loop.mp4        # 首页立绘循环视频（440×560 / 60fps / 635KB）
+│   ├── maid-poster.jpg      # 视频封面（省流、减少动效时显示）
+│   └── maid-still.webp      # 透明底静帧，给 404 / 关于页
 └── src/
     ├── content.config.ts    # 文章集合 schema
     ├── content/posts/       # Markdown 文章
     ├── components/
-    │   ├── Mascot.astro     # 首页那条鱼（纯手写 SVG 半身像，会眨眼/甩头发）
     │   └── TechBackground.astro  # 文章页粒子网络 + 鼠标互动
     ├── lib/post.ts          # 日期 / 阅读时长 / 排序 / 标签色相
     ├── layouts/Base.astro   # 全站骨架（variant: anime | tech）
     ├── pages/
-    │   ├── index.astro      # 首页：立绘 + 文章卡片
+    │   ├── index.astro      # 首页：立绘视频 + 文章卡片
     │   ├── tags.astro       # 标签云 + 筛选（?tag=xxx）
     │   ├── search.astro     # 关键词搜索（?q=xxx）
     │   ├── search.json.ts   # 搜索索引，构建时生成 /search.json
@@ -108,6 +110,26 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 
 标签的颜色由标签名 hash 出来（`tagHue()`），同一个标签永远是同一个色相，
 换文章、重新构建都不会变色。字号随文章数微调。
+
+## 首页立绘视频
+
+`maid-loop.mp4` 不是直接丢进来的素材，是从一段 24fps 的 VP9 黑底 webm 处理出来的：
+
+1. **扔掉坏帧**——源里有 10 帧轮廓被背景啃掉一圈（前景面积突然少 2 个百分点），
+   按「面积 / 质心偏离局部中位数」检测后删掉；
+2. **闭环**——结尾 8 帧和开头 8 帧交叉淡化，首尾差从 11.6 降到 4.1（比正常相邻帧还小）；
+3. **补帧**——`minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1`
+   从 24fps 补到 60fps；
+4. **轻降噪**——`hqdn3d=2:1.5:5:4`，源自带的压缩噪声很吃码率；
+5. **编码**——440×560，x264 CRF 26。同一素材 H.264 比 VP9 小 30%，而且 iOS 也能放。
+
+播放这块有三个坑：
+
+- 视频是**黑底、没有 alpha 通道**，靠 `mix-blend-mode: screen` 把黑色吃掉，等于自带透明；
+  为此 `.scene` 用 `z-index:-1`、`.wrap` 不能有 `z-index`——一旦有祖先形成 stacking context，混合立刻失效，黑方块就露出来了。
+- `<video preload="none">` + JS 按需加载：`prefers-reduced-motion` 或 `saveData` / 2G 时
+  **一个字节都不下载**，只显示封面图。
+- 滚出视口自动暂停，切回标签页再继续。
 
 ## 视觉约定
 
