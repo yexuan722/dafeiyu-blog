@@ -12,6 +12,8 @@ draft: false
 
 先说结论：最后用的是开源项目 [dsh-whale-girl-live2d](https://github.com/Andersen216/dsh-whale-girl-live2d) 里的 **DeepSeek 鲸鱼娘**（Cubism 4），代码 MIT、素材 CC BY-NC-SA 非商业，自托管约 3.3MB，只在宽屏、非省流、允许动效时才懒加载。
 
+> **2026-11-01 补记**：这只看板娘已经下线了——连同首页那条循环立绘视频一起删掉，首页换成了插画 banner + 卡片栅格，全站加了日间/夜间切换。这篇留作技术记录，里面的参数和踩坑过程仍然有效。
+
 ---
 
 ## 零、为啥不用 B站 2233

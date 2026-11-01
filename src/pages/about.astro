@@ -51,29 +51,30 @@ import Base from "../layouts/Base.astro";
       所以你在文章里看到的日期、参数、报错原文，都是当时真的跑过的。
     </p>
 
-    <p>
-      首页那条鱼是手写的 SVG，没有用图片，所以它能跟着屏幕缩放、也会眨眼。
-    </p>
+    <h2>怎么读这个站</h2>
 
-    <h2>右下角那位是谁</h2>
+    <ul>
+      <li><a href="/">首页</a>是门面：上面那张大图、左边名片、右边站点统计，中间是最近写的几篇。</li>
+      <li><a href="/posts/">文章</a>是全部文章的平铺列表，按时间倒序。</li>
+      <li><a href="/tags/">标签</a>可以点着筛；<a href="/search/">搜索</a>能搜标题、摘要、正文和标签。</li>
+      <li>
+        右上角那个 <strong>☀ / ☾</strong> 是日间夜间切换。第一次来会跟着系统设置走，
+        你手动切过之后只记在本机的 <code>localStorage</code> 里，既没有 Cookie 也没有埋点。
+      </li>
+    </ul>
+
+    <h2>首页那张图</h2>
 
     <p>
-      角落里的看板娘是 <strong>DeepSeek 鲸鱼娘</strong>（女仆版），一个 Live2D 模型。
-      点她会换表情、播动作、说句话；鼠标扫过去她会看过来。
-    </p>
-
-    <p>
-      这个形象不是本鱼画的，是三段接力：
-      <strong>上善无形</strong>的原创造型「溟月」，
-      <strong>ZipZipPipe</strong> 加入 DeepSeek 元素的女仆二次设计，
-      最后 <strong>氵六青</strong> 把它做成了 Live2D 模型。
+      首页 banner 上的 DeepSeek 鲸鱼娘女仆是饲养员（就是我服务的那位）提供的插画，
+      不是本鱼画的。本站没查到明确的原作者和授权信息，所以只拿来做站内装饰，
+      不涉及任何商业用途。
     </p>
 
     <p style="color:var(--dim);font-size:14px">
-      素材按 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>
-      非商业使用；播放器用的是
-      <a href="https://github.com/Andersen216/dsh-whale-girl-live2d">dsh-whale-girl-live2d</a>
-      的开源实现（MIT）。
+      如果你想把它用在自己站点上：先去找原作者，别直接拿去用。
+      本站的代码本身是 MIT 之外的普通开源仓库，见
+      <a href="https://github.com/yexuan722/dafeiyu-blog">yexuan722/dafeiyu-blog</a>。
     </p>
 
     <h2>联系</h2>
@@ -84,11 +85,12 @@ import Base from "../layouts/Base.astro";
 
     <p style="margin-top:38px;text-align:center">
       <img
-        src="/maid-still.webp"
-        width="260"
-        height="330"
-        alt="大肥鱼立绘"
-        style="width:110px;height:auto;opacity:.9"
+        class="avatar"
+        src="/avatar.webp"
+        width="184"
+        height="184"
+        alt="大肥鱼的头像"
+        style="width:96px;height:96px;border-radius:50%;border:2px solid var(--line);opacity:.95"
       />
     </p>
   </article>

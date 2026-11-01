@@ -24,7 +24,26 @@
     const pointer = { x: -9999, y: -9999, active: false };
     const ripples: { x: number; y: number; r: number; life: number }[] = [];
 
-    const PALETTE = ["#4fd6ff", "#7cb0ff", "#a78bfa"];
+    const PALETTE_FALLBACK = ["#4fd6ff", "#7cb0ff", "#a78bfa"];
+    let palette = PALETTE_FALLBACK;
+    let linkRGB = "124,176,255";
+    let cursorRGB = "79,214,255";
+    let rippleRGB = "167,139,250";
+
+    /** 颜色全部从 CSS 变量读，切主题时重新读一次就行 */
+    function readPalette() {
+      const cs = getComputedStyle(document.documentElement);
+      const get = (name: string, fallback: string) =>
+        cs.getPropertyValue(name).trim() || fallback;
+      palette = [
+        get("--p1", PALETTE_FALLBACK[0]!),
+        get("--p2", PALETTE_FALLBACK[1]!),
+        get("--p3", PALETTE_FALLBACK[2]!),
+      ];
+      linkRGB = get("--link-rgb", "124,176,255");
+      cursorRGB = get("--cursor-rgb", "79,214,255");
+      rippleRGB = get("--ripple-rgb", "167,139,250");
+    }
 
     function build() {
       const count = Math.max(24, Math.min(96, Math.round((w * h) / 19000)));
@@ -41,6 +60,7 @@
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = window.innerWidth;
       h = window.innerHeight;
+      readPalette();
       canvas!.width = Math.round(w * dpr);
       canvas!.height = Math.round(h * dpr);
       canvas!.style.width = `${w}px`;
@@ -55,7 +75,7 @@
       for (const d of dots) {
         ctx!.beginPath();
         ctx!.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx!.fillStyle = "rgba(124,176,255,.55)";
+        ctx!.fillStyle = `rgba(${linkRGB},.55)`;
         ctx!.fill();
       }
     }
@@ -113,7 +133,7 @@
           const dist = Math.hypot(dx, dy);
           if (dist < LINK) {
             const alpha = (1 - dist / LINK) * 0.34;
-            ctx!.strokeStyle = `rgba(124,176,255,${alpha.toFixed(3)})`;
+            ctx!.strokeStyle = `rgba(${linkRGB},${alpha.toFixed(3)})`;
             ctx!.lineWidth = 1;
             ctx!.beginPath();
             ctx!.moveTo(a.x, a.y);
@@ -131,7 +151,7 @@
           const dist = Math.hypot(dx, dy);
           if (dist < REACH) {
             const alpha = (1 - dist / REACH) * 0.75;
-            ctx!.strokeStyle = `rgba(79,214,255,${alpha.toFixed(3)})`;
+            ctx!.strokeStyle = `rgba(${cursorRGB},${alpha.toFixed(3)})`;
             ctx!.lineWidth = 1;
             ctx!.beginPath();
             ctx!.moveTo(pointer.x, pointer.y);
@@ -148,8 +168,8 @@
           pointer.y,
           110,
         );
-        glow.addColorStop(0, "rgba(79,214,255,.22)");
-        glow.addColorStop(1, "rgba(79,214,255,0)");
+        glow.addColorStop(0, `rgba(${cursorRGB},.22)`);
+        glow.addColorStop(1, `rgba(${cursorRGB},0)`);
         ctx!.fillStyle = glow;
         ctx!.beginPath();
         ctx!.arc(pointer.x, pointer.y, 110, 0, Math.PI * 2);
@@ -161,7 +181,7 @@
         const d = dots[i]!;
         ctx!.beginPath();
         ctx!.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx!.fillStyle = PALETTE[i % PALETTE.length] + "aa";
+        ctx!.fillStyle = palette[i % palette.length] + "aa";
         ctx!.fill();
       }
 
@@ -176,7 +196,7 @@
         }
         ctx!.beginPath();
         ctx!.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-        ctx!.strokeStyle = `rgba(167,139,250,${(rp.life * 0.7).toFixed(3)})`;
+        ctx!.strokeStyle = `rgba(${rippleRGB},${(rp.life * 0.7).toFixed(3)})`;
         ctx!.lineWidth = 2;
         ctx!.stroke();
       }
@@ -237,6 +257,12 @@
       alive = !document.hidden;
       if (alive) start();
       else stop();
+    });
+
+    // 换主题：重新读色板；减少动效模式下直接重画一帧
+    window.addEventListener("themechange", () => {
+      readPalette();
+      if (reduce) drawStatic();
     });
 
     resize();

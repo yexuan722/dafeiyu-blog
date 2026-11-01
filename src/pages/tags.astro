@@ -43,22 +43,35 @@ const tags = tagCounts(posts);
         posts.map((post) => (
           <li class="post-card" data-post data-tags={post.data.tags.join("|")}>
             <a href={`/posts/${post.id}/`}>
-              <div class="card-top">
-                <time datetime={post.data.pubDate.toISOString()}>
-                  {fmtDate(post.data.pubDate)}
-                </time>
-                <i class="sep" />
-                <span>约 {readingMinutes(post.body)} 分钟</span>
-              </div>
-              <h2>{post.data.title}</h2>
-              {post.data.description && <p class="desc">{post.data.description}</p>}
-              {post.data.tags.length > 0 && (
-                <div class="tags">
-                  {post.data.tags.map((t) => (
-                    <span class="tag">#{t}</span>
-                  ))}
+              <div class="card-main">
+                <div class="card-top">
+                  <time datetime={post.data.pubDate.toISOString()}>
+                    {fmtDate(post.data.pubDate)}
+                  </time>
+                  <i class="sep" />
+                  <span>约 {readingMinutes(post.body)} 分钟</span>
                 </div>
-              )}
+                <h2>{post.data.title}</h2>
+                {post.data.description && <p class="desc">{post.data.description}</p>}
+                {post.data.tags.length > 0 && (
+                  <div class="tags">
+                    {post.data.tags.map((t) => (
+                      <span class="tag">#{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span class="card-go" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9 5.5 16.5 12 9 18.5"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
             </a>
           </li>
         ))

@@ -1,13 +1,16 @@
 ---
 import "../styles/global.css";
 import TechBackground from "../components/TechBackground.astro";
-import WhalePet from "../components/WhalePet.astro";
 
 interface Props {
   title?: string;
   description?: string;
   variant?: "anime" | "tech";
   wide?: boolean;
+  /** 首页用：不要 .wrap 的内边距，自己排版 */
+  full?: boolean;
+  /** 首页用：顶栏压在大图上，滚动后才落底 */
+  overlay?: boolean;
   active?: "posts" | "tags" | "search" | "about";
 }
 
@@ -16,11 +19,13 @@ const {
   description = "折腾笔记、AI 工具，以及一些还没想明白的问题。",
   variant = "tech",
   wide = false,
+  full = false,
+  overlay = false,
   active,
 } = Astro.props;
 
 const navItems = [
-  { key: "posts", href: "/", label: "文章" },
+  { key: "posts", href: "/posts/", label: "文章" },
   { key: "tags", href: "/tags/", label: "标签" },
   { key: "search", href: "/search/", label: "搜索" },
   { key: "about", href: "/about/", label: "关于" },
@@ -33,14 +38,19 @@ const canonical = Astro.site
   ? new URL(Astro.url.pathname, Astro.site).href
   : Astro.url.pathname;
 const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
+
+const mainClass = ["wrap", wide ? "wrap--post" : "", full ? "wrap--full" : ""]
+  .filter(Boolean)
+  .join(" ");
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0d16" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" id="theme-color" content="#0a0d16" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -60,6 +70,24 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
     <meta name="twitter:image" content={ogImage} />
 
     <title>{pageTitle}</title>
+
+    {/* 首屏之前定主题，避免白屏闪一下 */}
+    <script is:inline>
+      (() => {
+        const KEY = "dafeiyu-theme";
+        let saved = null;
+        try {
+          saved = localStorage.getItem(KEY);
+        } catch {}
+        const theme =
+          saved === "light" || saved === "dark"
+            ? saved
+            : window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body class={`variant-${variant}`}>
     {
@@ -73,7 +101,7 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
       )
     }
 
-    <header class="site-header">
+    <header class={`site-header ${overlay ? "is-over" : ""}`}>
       <div class="inner">
         <a class="brand" href="/">
           <svg width="21" height="21" viewBox="0 0 64 64" aria-hidden="true">
@@ -102,7 +130,7 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
               stroke-linecap="round"></path>
             <circle cx="32" cy="12.5" r="3.2" fill="#f6f1e7"></circle>
           </svg>
-          大肥鱼的鱼塘
+          <span>大肥鱼的鱼塘</span>
         </a>
         <nav>
           {
@@ -117,18 +145,40 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
             ))
           }
         </nav>
+        <button
+          class="theme-btn"
+          type="button"
+          data-theme-toggle
+          aria-label="切换到日间模式"
+          aria-pressed="false"
+          title="日间 / 夜间"
+        >
+          <svg class="i-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"></circle>
+            <path
+              d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"></path>
+          </svg>
+          <svg class="i-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M20.4 14.6A8.6 8.6 0 1 1 9.4 3.6a6.9 6.9 0 0 0 11 11Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
-    <main class={`wrap ${wide ? "wrap--post" : ""}`}>
+    <main class={mainClass}>
       <slot />
     </main>
 
     <footer class="site-footer">
       <p>© {new Date().getFullYear()} 大肥鱼的鱼塘 · 咕噜咕噜</p>
-      <p class="credit">
-        看板娘形象：上善无形 / ZipZipPipe / 氵六青 · CC BY-NC-SA 4.0
-      </p>
+      <p class="credit">右上角的 ☀ / ☾ 换日间夜间，选择只存在你自己的浏览器里。</p>
       <div class="links">
         <a href="https://github.com/yexuan722/dafeiyu-blog">源码</a>
         <a href="https://astro.build">Astro</a>
@@ -137,6 +187,41 @@ const ogImage = Astro.site ? new URL("/og.jpg", Astro.site).href : "/og.jpg";
       </div>
     </footer>
 
-    <WhalePet />
+    <script>
+      const KEY = "dafeiyu-theme";
+      const root = document.documentElement;
+      const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+      const meta = document.getElementById("theme-color");
+
+      function apply(theme: "dark" | "light") {
+        root.dataset.theme = theme;
+        if (meta) meta.setAttribute("content", theme === "light" ? "#f3f6fc" : "#0a0d16");
+        if (btn) {
+          const light = theme === "light";
+          btn.setAttribute("aria-label", light ? "切换到夜间模式" : "切换到日间模式");
+          btn.setAttribute("aria-pressed", String(light));
+          btn.title = light ? "切回夜间" : "切到日间";
+        }
+        window.dispatchEvent(new CustomEvent("themechange", { detail: theme }));
+      }
+
+      apply(root.dataset.theme === "light" ? "light" : "dark");
+
+      btn?.addEventListener("click", () => {
+        const next = root.dataset.theme === "light" ? "dark" : "light";
+        apply(next);
+        try {
+          localStorage.setItem(KEY, next);
+        } catch {}
+      });
+
+      // 首页顶栏：开始滚动后落底，别一直透明压着图片
+      const header = document.querySelector<HTMLElement>(".site-header.is-over");
+      if (header) {
+        const onScroll = () => header.classList.toggle("is-stuck", window.scrollY > 28);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+      }
+    </script>
   </body>
 </html>
