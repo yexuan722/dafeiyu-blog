@@ -499,40 +499,26 @@ a:hover {
    首页
    ============================================================ */
 
+/* 通栏 banner：图片按 cover 铺满整个宽度，不再用蒙版把左边刷掉。
+   原图里自带 DEEPSEEK 字样，标题压在它上面会糊成一团，
+   所以文案挪到图片下面，banner 只负责好看。
+   图片走 CSS 变量：深色主题是画好的深色版，浅色主题是原图，只下载用到的那张。 */
 .home-hero {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  min-height: clamp(430px, 46vw, 600px);
-  padding-bottom: 52px;
+  height: clamp(300px, 30vw, 520px);
   overflow: hidden;
-  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 58%);
+  background: var(--bg-2);
 }
 
-/* 立绘靠右，左边用遮罩淡出去当留白：
-   原图左侧印着 DEEPSEEK 字样，硬压一层色块会露鬼影，遮掉最干净。
-   再叠一个径向遮罩，把白底化成一圈光晕，深色主题下才不像贴了张纸。
-   图片走 CSS 变量：深色主题直接换一张画好的深色版，只下载用到的那张。 */
 .hero-img {
   position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  aspect-ratio: 1280 / 714;
+  inset: 0;
   z-index: 0;
   background-image: var(--hero-art);
   background-repeat: no-repeat;
-  background-position: right center;
-  background-size: 100% 100%;
+  background-position: 50% 12%;
+  background-size: cover;
   filter: var(--hero-filter);
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, transparent 40%, #000 58%),
-    radial-gradient(118% 122% at 74% 44%, #000 52%, transparent 92%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to right, transparent 0%, transparent 40%, #000 58%),
-    radial-gradient(118% 122% at 74% 44%, #000 52%, transparent 92%);
-  mask-composite: intersect;
 }
 
 .hero-veil {
@@ -540,17 +526,13 @@ a:hover {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(to top, var(--veil-bottom) 0%, var(--veil-bottom-fade) 38%),
-    linear-gradient(to bottom, var(--veil-top) 0%, var(--veil-top-fade) 16%);
+    linear-gradient(to top, var(--bg) 0%, var(--veil-bottom-fade) 30%),
+    linear-gradient(to bottom, var(--veil-top) 0%, var(--veil-top-fade) 26%);
 }
 
-.hero-copy {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: var(--shell-wide);
-  margin: 0 auto;
-  padding: 0 24px;
+.hero-intro {
+  max-width: 46em;
+  margin: 30px 0 34px;
   animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -603,7 +585,7 @@ a:hover {
   }
 }
 
-.hero-copy h1 {
+.hero-intro h1 {
   margin: 16px 0 14px;
   font-size: clamp(32px, 4.8vw, 54px);
   line-height: 1.15;
@@ -612,14 +594,14 @@ a:hover {
   color: var(--text-strong);
 }
 
-.hero-copy h1 .tint {
+.hero-intro h1 .tint {
   background: linear-gradient(100deg, var(--accent) 8%, var(--cyan) 52%, var(--violet) 96%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-:root[data-theme="light"] .hero-copy h1 .tint {
+:root[data-theme="light"] .hero-intro h1 .tint {
   background: linear-gradient(100deg, #2f6fd0 4%, #1287bd 52%, #6a58cc 96%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1873,42 +1855,17 @@ mark {
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   }
 
-  /* 小屏改成上下排：立绘在上、文案在下，别让字压在裙子上 */
+  /* 小屏 banner 压短一点，整张图当条幅铺满 */
   .home-hero {
-    display: block;
-    min-height: 0;
-    padding: 62px 0 30px;
+    height: clamp(200px, 56vw, 280px);
   }
 
   .hero-img {
-    position: relative;
-    top: auto;
-    right: auto;
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 6 / 5;
-    background-size: cover;
-    background-position: 100% 14%;
-    margin-bottom: 16px;
-    -webkit-mask-image:
-      linear-gradient(to right, transparent 0%, transparent 15%, #000 58%),
-      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%),
-      linear-gradient(to bottom, #000 72%, transparent 100%);
-    -webkit-mask-composite: source-in;
-    mask-image:
-      linear-gradient(to right, transparent 0%, transparent 15%, #000 58%),
-      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%),
-      linear-gradient(to bottom, #000 72%, transparent 100%);
-    mask-composite: intersect;
+    background-position: 50% 34%;
   }
 
-  .hero-veil {
-    display: none;
-  }
-
-  .hero-copy {
-    padding: 0 18px;
+  .hero-intro {
+    margin: 22px 0 26px;
   }
 }
 
@@ -1963,11 +1920,7 @@ mark {
     gap: 16px;
   }
 
-  .hero-copy {
-    padding: 0 18px;
-  }
-
-  .hero-copy h1 {
+  .hero-intro h1 {
     font-size: 30px;
   }
 
@@ -2040,7 +1993,7 @@ mark {
 
   .scene--anime::before,
   .scene--anime::after,
-  .hero-copy {
+  .hero-intro {
     animation: none !important;
   }
 }
