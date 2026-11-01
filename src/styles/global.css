@@ -68,6 +68,7 @@
   --shadow-soft: 0 18px 40px -30px rgba(0, 0, 0, 0.8);
 
   /* ---- 首屏 ---- */
+  --veil-fade: rgba(10, 13, 22, 0);
   --hero-art: url("/hero-dark.webp");
   --hero-filter: none;
 
@@ -145,6 +146,7 @@
   --shadow-card: 0 20px 40px -28px rgba(31, 66, 124, 0.45);
   --shadow-soft: 0 14px 34px -26px rgba(23, 44, 84, 0.4);
 
+  --veil-fade: rgba(243, 246, 252, 0);
   --hero-art: url("/hero.webp");
   --hero-filter: none;
 
@@ -488,9 +490,9 @@ a:hover {
    原图里自带 DEEPSEEK 字样，标题压在它上面会糊成一团，
    所以文案挪到图片下面，banner 只负责好看。
    图片走 CSS 变量：深色主题是画好的深色版，浅色主题是原图，只下载用到的那张。 */
-/* banner 按原图比例铺满：图是 1920×1071，所以 100vw 宽对应 55.8vw 高，
-   这样人是整只露出来的，不会被上下裁掉。窗口太矮时（100vh 不够）退回 contain，
-   两侧留出来的底色跟图里的底色几乎同色，看不出来。 */
+/* banner 铺满：图是 1920×1071，理想高度是 55.8vw。
+   窗口矮的时候封顶到 100vh，这时会裁掉一点上下（顶部留白多，先裁它），
+   底下用一小段渐变把裁口收进背景里——只裁一小条，不会把人砍断。 */
 .home-hero {
   position: relative;
   display: flex;
@@ -506,9 +508,18 @@ a:hover {
   z-index: 0;
   background-image: var(--hero-art);
   background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: contain;
+  background-position: center 20%;
+  background-size: cover;
   filter: var(--hero-filter);
+}
+
+/* 只压底部一小段：图上缘裁掉的是头饰上方的空白，不用管 */
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--bg) 0%, var(--veil-fade) 13%);
 }
 
 /* 图是 1920 宽的，1x 屏铺到 1900 多基本是 1:1，很清楚。
@@ -1868,6 +1879,10 @@ mark {
     position: relative;
     height: 55.8vw;
     background-position: center;
+  }
+
+  .hero-veil {
+    display: none;
   }
 
   .hero-inner {
