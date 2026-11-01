@@ -521,6 +521,20 @@ a:hover {
   filter: var(--hero-filter);
 }
 
+/* 原图只有 1280 宽。窗口一过 1000px，1x 图就要被拉大，再赶上 2 倍屏就是 3 倍放大，
+   看着当然糊。所以宽屏统一换 2560 宽的 2 倍图（122KB）：1x 屏是缩小着画，
+   2x 屏也就 1.1 倍，手机和平板仍旧用 45KB 那张。
+   想要真正清晰，还是得有一张 2560 以上的原图。 */
+@media (min-width: 1000px) {
+  .hero-img {
+    background-image: url("/hero-dark-2x.webp");
+  }
+
+  :root[data-theme="light"] .hero-img {
+    background-image: url("/hero-2x.webp");
+  }
+}
+
 .hero-veil {
   position: absolute;
   inset: 0;
