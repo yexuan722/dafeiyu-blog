@@ -76,7 +76,8 @@
   --veil-bottom-fade: rgba(10, 13, 22, 0);
   --veil-top: rgba(10, 13, 22, 0.8);
   --veil-top-fade: rgba(10, 13, 22, 0);
-  --hero-filter: brightness(0.8) saturate(1.05);
+  --hero-art: url("/hero-dark.webp");
+  --hero-filter: none;
 
   /* ---- 滚动条 ---- */
   --scroll-track: #0a0d16;
@@ -158,6 +159,7 @@
   --veil-bottom-fade: rgba(243, 246, 252, 0);
   --veil-top: rgba(243, 246, 252, 0.88);
   --veil-top-fade: rgba(243, 246, 252, 0);
+  --hero-art: url("/hero.webp");
   --hero-filter: none;
 
   --scroll-track: #eef2fa;
@@ -509,22 +511,26 @@ a:hover {
 
 /* 立绘靠右，左边用遮罩淡出去当留白：
    原图左侧印着 DEEPSEEK 字样，硬压一层色块会露鬼影，遮掉最干净。
-   再叠一个径向遮罩，把白底化成一圈光晕，深色主题下才不像贴了张纸。 */
+   再叠一个径向遮罩，把白底化成一圈光晕，深色主题下才不像贴了张纸。
+   图片走 CSS 变量：深色主题直接换一张画好的深色版，只下载用到的那张。 */
 .hero-img {
   position: absolute;
   top: 0;
   right: 0;
   height: 100%;
-  width: auto;
-  max-width: none;
+  aspect-ratio: 1280 / 714;
   z-index: 0;
+  background-image: var(--hero-art);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 100% 100%;
   filter: var(--hero-filter);
   -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, transparent 38%, #000 66%),
+    linear-gradient(to right, transparent 0%, transparent 40%, #000 58%),
     radial-gradient(118% 122% at 74% 44%, #000 52%, transparent 92%);
   -webkit-mask-composite: source-in;
   mask-image:
-    linear-gradient(to right, transparent 0%, transparent 38%, #000 66%),
+    linear-gradient(to right, transparent 0%, transparent 40%, #000 58%),
     radial-gradient(118% 122% at 74% 44%, #000 52%, transparent 92%);
   mask-composite: intersect;
 }
@@ -1882,16 +1888,18 @@ mark {
     width: 100%;
     height: auto;
     aspect-ratio: 6 / 5;
-    object-fit: cover;
-    object-position: 100% 14%;
+    background-size: cover;
+    background-position: 100% 14%;
     margin-bottom: 16px;
     -webkit-mask-image:
       linear-gradient(to right, transparent 0%, transparent 15%, #000 58%),
-      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%);
+      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%),
+      linear-gradient(to bottom, #000 72%, transparent 100%);
     -webkit-mask-composite: source-in;
     mask-image:
       linear-gradient(to right, transparent 0%, transparent 15%, #000 58%),
-      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%);
+      radial-gradient(112% 108% at 74% 40%, #000 60%, transparent 96%),
+      linear-gradient(to bottom, #000 72%, transparent 100%);
     mask-composite: intersect;
   }
 
