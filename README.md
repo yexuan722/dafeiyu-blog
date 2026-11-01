@@ -77,11 +77,11 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 ├── public/                  # 原样拷贝到产物根目录
 │   ├── _headers             # Cloudflare 安全头与缓存策略
 │   ├── favicon.svg
-│   ├── hero.webp            # 首页 banner 插画 1280×714（45KB）
-│   ├── hero-dark.webp       # 同一张图的深色版（55KB）
-│   ├── hero-2x.webp         # 122KB，宽屏 / 高分屏用的 2 倍图（2560×1428）
-│   ├── hero-dark-2x.webp    # 116KB，同上，深色版
-│   ├── avatar.webp          # 从同一张图裁的头像 256×256（12KB）
+│   ├── hero.webp            # 首页 banner 插画（日间）1920×1071，91KB
+│   ├── hero-dark.webp       # 同一张图的夜间版，73KB
+│   ├── hero-2x.webp         # 141KB，高分屏（≥1.5 倍）用的 2880×1607
+│   ├── hero-dark-2x.webp    # 103KB，同上，夜间版
+│   ├── avatar.webp          # 从日间图裁的头像 288×288（15KB）
 │   └── og.jpg               # 社交卡片图 1200×630
 └── src/
     ├── content.config.ts    # 文章集合 schema
@@ -120,16 +120,15 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 - **banner** 是通栏的：`.hero-img` 用 `background-size: cover` 铺满整个宽度（高度
   `clamp(300px, 30vw, 520px)`），小屏压到 200–280px 当条幅。日间 `hero.webp`、
   夜间 `hero-dark.webp`，靠 CSS 变量 `--hero-art` 切，只下载当前主题用到的那张。
-- 原图自带 `DEEPSEEK` 字样和鲸鱼 logo，站名压上去会糊成一团，所以文案放在 banner
-  **下面**的 `.hero-intro` 里，banner 只负责好看。**别再给 banner 加 `mask-image`
-  把左边抠掉**——那样左边会变成一块死黑，跟图片接不上。
+- 文案放在 banner **下面**的 `.hero-intro` 里，不压在图上。**别再给 banner 加
+  `mask-image` 把左边抠掉**——那样左边会变成一块死黑，跟图片接不上。
 - 深色版不是滤镜压出来的，是拿原图重新做了背景：连通域抠掉白色底（腐蚀一次掐断
   头饰蕾丝那条「细脖子」，再膨胀回来），换成深蓝渐变 + 角色身后的光晕，左边字标 /
   鲸鱼 / 细线按「墨层浓度」重新上色——直接压暗的话白底会变成一块脏灰。脚本在
   `sessions/2026-11-01-home-redesign/make_dark_hero.py`。
-- 原图只有 **1280×714**，铺满 1400+ 的窗口就是 1.5 倍放大，2 倍屏上更惨，所以窗口 ≥1000px
-  时换成 2560 宽的 2 倍图（`hero-2x.webp` / `hero-dark-2x.webp`，各 120KB 左右）。
-  要是能拿到 2560 以上的原图，直接把 2x 这两个文件替换掉就是真清晰了，不用改代码。
+- 两张图都是 **1920×1071**（饲养员后来重制的干净版，去掉了原图里那行 DEEPSEEK 字样），
+  铺满 1900 左右的窗口基本 1:1，1x 屏很清楚。窗口 ≥1000px 且屏幕是 1.5 倍以上时，
+  才换 2880 宽的 `-2x` 版本，免得白下 140KB。
 - banner 下面是三栏栅格 `250px | 1fr | 250px`：名片 / 文章流 / 站点统计。1120px
   以下名片转成横向长条钉在顶上，820px 以下全部堆成一列。
 - 顶栏用 `overlay` 模式压在大图上，滚过 28px 才落底变不透明。
