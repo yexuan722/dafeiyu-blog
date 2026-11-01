@@ -67,15 +67,7 @@
   --shadow-card: 0 22px 44px -24px rgba(80, 140, 240, 0.6);
   --shadow-soft: 0 18px 40px -30px rgba(0, 0, 0, 0.8);
 
-  /* ---- 首屏 ----
-     淡出必须用「同色的 0 透明度」，不能写 transparent：
-     渐变插值不是预乘的，白/暗色到 transparent 中间会冒出一条灰带 */
-  --veil-left: #0a0d16;
-  --veil-left-fade: rgba(10, 13, 22, 0);
-  --veil-bottom: #0a0d16;
-  --veil-bottom-fade: rgba(10, 13, 22, 0);
-  --veil-top: rgba(10, 13, 22, 0.8);
-  --veil-top-fade: rgba(10, 13, 22, 0);
+  /* ---- 首屏 ---- */
   --hero-art: url("/hero-dark.webp");
   --hero-filter: none;
 
@@ -153,12 +145,6 @@
   --shadow-card: 0 20px 40px -28px rgba(31, 66, 124, 0.45);
   --shadow-soft: 0 14px 34px -26px rgba(23, 44, 84, 0.4);
 
-  --veil-left: #f3f6fc;
-  --veil-left-fade: rgba(243, 246, 252, 0);
-  --veil-bottom: #f3f6fc;
-  --veil-bottom-fade: rgba(243, 246, 252, 0);
-  --veil-top: rgba(243, 246, 252, 0.88);
-  --veil-top-fade: rgba(243, 246, 252, 0);
   --hero-art: url("/hero.webp");
   --hero-filter: none;
 
@@ -344,14 +330,13 @@ a:hover {
   -webkit-backdrop-filter: none;
 }
 
-/* 顶栏压在图上时给自己垫一层渐变，导航字才看得清 */
-.site-header.is-over:not(.is-stuck)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, var(--veil-top), var(--veil-top-fade));
+/* 顶上不再压渐变，靠一点点文字阴影保证导航在图上看得清 */
+.site-header.is-over:not(.is-stuck) {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"] .site-header.is-over:not(.is-stuck) {
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.85);
 }
 
 .site-header.is-over.is-stuck {
@@ -503,11 +488,16 @@ a:hover {
    原图里自带 DEEPSEEK 字样，标题压在它上面会糊成一团，
    所以文案挪到图片下面，banner 只负责好看。
    图片走 CSS 变量：深色主题是画好的深色版，浅色主题是原图，只下载用到的那张。 */
+/* banner 按原图比例铺满：图是 1920×1071，所以 100vw 宽对应 55.8vw 高，
+   这样人是整只露出来的，不会被上下裁掉。窗口太矮时（100vh 不够）退回 contain，
+   两侧留出来的底色跟图里的底色几乎同色，看不出来。 */
 .home-hero {
   position: relative;
-  height: clamp(300px, 30vw, 520px);
+  display: flex;
+  align-items: center;
+  min-height: min(55.8vw, 100vh);
   overflow: hidden;
-  background: var(--bg-2);
+  background: var(--bg);
 }
 
 .hero-img {
@@ -516,8 +506,8 @@ a:hover {
   z-index: 0;
   background-image: var(--hero-art);
   background-repeat: no-repeat;
-  background-position: 50% 12%;
-  background-size: cover;
+  background-position: center bottom;
+  background-size: contain;
   filter: var(--hero-filter);
 }
 
@@ -534,18 +524,17 @@ a:hover {
   }
 }
 
-.hero-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(to top, var(--bg) 0%, var(--veil-bottom-fade) 30%),
-    linear-gradient(to bottom, var(--veil-top) 0%, var(--veil-top-fade) 26%);
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--shell-wide);
+  margin: 0 auto;
+  padding: 110px 24px 70px;
 }
 
 .hero-intro {
-  max-width: 46em;
-  margin: 30px 0 34px;
+  max-width: 40em;
   animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -1868,19 +1857,21 @@ mark {
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   }
 
-  /* 小屏 banner 压短一点，整张图当条幅铺满 */
+  /* 手机上不放字在图上了：图按原比例当条幅，文案接在下面 */
   .home-hero {
-    height: clamp(200px, 56vw, 280px);
+    display: block;
+    min-height: 0;
+    padding-top: 56px;
   }
 
-  /* 手机上 banner 只有 200 出头，整张图塞进去人就太小，往右推近一点 */
   .hero-img {
-    background-size: auto 200%;
-    background-position: right 24%;
+    position: relative;
+    height: 55.8vw;
+    background-position: center;
   }
 
-  .hero-intro {
-    margin: 22px 0 26px;
+  .hero-inner {
+    padding: 22px 18px 26px;
   }
 }
 
