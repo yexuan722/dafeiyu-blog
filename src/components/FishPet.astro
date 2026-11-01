@@ -1,0 +1,334 @@
+---
+// 桌宠：点一下就换一只大肥鱼，气泡里说她现在的心情。
+// 7 张动图都是压缩过的 animated webp（240×240，单张 130–320KB，懒加载）。
+const PETS = [
+  { src: "/pet/working.webp", alt: "正在干活的大肥鱼", mood: "干活中", text: "本鱼在认真干活哦～今天也要好好吃饭呀", kao: "(๑•̀ㅂ•́)و✧" },
+  { src: "/pet/typing.webp", alt: "正在打字的大肥鱼", mood: "敲字中", text: "啪嗒啪嗒～在给你敲字呢", kao: "(๑´ω`๑)" },
+  { src: "/pet/sleepy.webp", alt: "打瞌睡的大肥鱼", mood: "犯困", text: "唔…就让本鱼眯一小会儿，饭好了叫我", kao: "(｡-ω-)zzz" },
+  { src: "/pet/tired.webp", alt: "有点累的大肥鱼", mood: "鱼脑过载", text: "鱼脑过载了…咕噜咕噜，先歇口气", kao: "(｡•́︿•̀｡)" },
+  { src: "/pet/angry-work.webp", alt: "生气干活的大肥鱼", mood: "炸毛", text: "谁把本鱼的饭盒藏起来了！", kao: "(╬ Ò﹏Ó)" },
+  { src: "/pet/typing-annoyed.webp", alt: "有点烦的大肥鱼", mood: "有点烦", text: "这个 bug 怎么又冒出来了呀", kao: "(＃`д´)" },
+  { src: "/pet/typing-angry.webp", alt: "气鼓鼓打字的大肥鱼", mood: "气鼓鼓", text: "本鱼要爆炸啦！", kao: "(╯°□°）╯" },
+];
+---
+
+<div class="fishpet" id="fishpet" data-count={PETS.length}>
+  <div class="fp-bubble" id="fpBubble" role="status" aria-live="polite"></div>
+
+  <button class="fp-body" id="fpBody" type="button" aria-label="戳一下大肥鱼，换个心情">
+    <img
+      id="fpImg"
+      src={PETS[0].src}
+      alt={PETS[0].alt}
+      width="120"
+      height="120"
+      loading="lazy"
+      decoding="async"
+    />
+  </button>
+
+  <button class="fp-close" id="fpClose" type="button" aria-label="把大肥鱼收起来">✕</button>
+</div>
+
+<script is:inline define:vars={{ PETS }}>
+  (() => {
+    const root = document.getElementById("fishpet");
+    if (!root) return;
+
+    const body = document.getElementById("fpBody");
+    const img = document.getElementById("fpImg");
+    const bubble = document.getElementById("fpBubble");
+    const close = document.getElementById("fpClose");
+    const STORE_KEY = "fishpet-state";
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const conn = navigator.connection || {};
+    const frugal = conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || "");
+
+    let index = 0;
+    let hidden = false;
+    let bubbleTimer = 0;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+      if (typeof saved.index === "number") index = saved.index % PETS.length;
+      hidden = saved.hidden === true;
+    } catch {}
+
+    // 支持 /#pet-3 这种链接直接定格某只（方便分享和排查）
+    const hash = /#pet-(\d+)/.exec(location.hash || "");
+    if (hash) index = Number(hash[1]) % PETS.length;
+
+    const save = () => {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({ index, hidden }));
+      } catch {}
+    };
+
+    const preloaded = new Set();
+    const preload = () => {
+      if (frugal) return;
+      PETS.forEach((pet, i) => {
+        if (i === index || preloaded.has(pet.src)) return;
+        const el = new Image();
+        el.src = pet.src;
+        preloaded.add(pet.src);
+      });
+    };
+
+    const say = (pet) => {
+      // 拆两行：正文一行、颜文字一行，免得表情符号在中间被折成两截
+      const text = document.createElement("span");
+      text.className = "fp-say";
+      text.textContent = pet.text;
+
+      const kao = document.createElement("span");
+      kao.className = "fp-kao";
+      kao.textContent = pet.kao;
+      kao.setAttribute("aria-hidden", "true");
+
+      bubble.replaceChildren(text, kao);
+      bubble.setAttribute("aria-label", `${pet.mood}：${pet.text} ${pet.kao}`);
+      bubble.classList.add("show");
+      window.clearTimeout(bubbleTimer);
+      bubbleTimer = window.setTimeout(() => bubble.classList.remove("show"), 3600);
+    };
+
+    const show = (i) => {
+      index = (i + PETS.length) % PETS.length;
+      const pet = PETS[index];
+      img.src = pet.src;
+      img.alt = pet.alt;
+      preloaded.add(pet.src);
+    };
+
+    const pop = () => {
+      if (reduce) return;
+      body.classList.remove("pop");
+      void body.offsetWidth; // 强制重排，动画才能重放
+      body.classList.add("pop");
+    };
+
+    const apply = () => {
+      root.classList.toggle("is-hidden", hidden);
+      if (!hidden) {
+        show(index);
+        // 宽屏两侧有留白，开场就冒个泡；窄屏会压住正文，等点了再说
+        if (window.innerWidth >= 1100) say(PETS[index]);
+      }
+    };
+
+    body.addEventListener("click", () => {
+      hidden = false;
+      show(index + 1);
+      pop();
+      say(PETS[index]);
+      save();
+      // 点过一次说明愿意看，把剩下的图预热一下
+      window.setTimeout(preload, 1200);
+    });
+
+    close.addEventListener("click", (event) => {
+      event.stopPropagation();
+      hidden = true;
+      save();
+      root.classList.add("is-hidden");
+    });
+
+    body.addEventListener("animationend", () => body.classList.remove("pop"));
+
+    apply();
+
+    // 首屏先不抢带宽，闲下来再预热
+    if (!frugal) {
+      if ("requestIdleCallback" in window) window.requestIdleCallback(preload, { timeout: 4000 });
+      else window.setTimeout(preload, 3000);
+    }
+  })();
+</script>
+
+<style>
+  .fishpet {
+    position: fixed;
+    left: 18px;
+    bottom: 14px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .fishpet.is-hidden {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+    pointer-events: none;
+  }
+
+  .fp-body {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    line-height: 0;
+    filter: drop-shadow(0 10px 18px rgba(6, 18, 40, 0.45));
+    transform-origin: 50% 88%;
+    transition: transform 0.18s ease;
+  }
+
+  .fp-body:hover {
+    transform: translateY(-3px) rotate(-2deg) scale(1.04);
+  }
+
+  .fp-body:active {
+    transform: scale(0.96);
+  }
+
+  .fp-body img {
+    width: 120px;
+    height: 120px;
+    display: block;
+    image-rendering: auto;
+    animation: fp-float 4.2s ease-in-out infinite;
+  }
+
+  /* q 弹：先压扁再回弹，带一点过冲 */
+  .fp-body.pop {
+    animation: fp-pop 0.58s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes fp-pop {
+    0% {
+      transform: scale(1);
+    }
+    28% {
+      transform: scale(0.82, 1.16);
+    }
+    52% {
+      transform: scale(1.14, 0.88);
+    }
+    72% {
+      transform: scale(0.96, 1.04);
+    }
+    88% {
+      transform: scale(1.03, 0.98);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fp-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  .fp-bubble {
+    position: relative;
+    max-width: 236px;
+    padding: 9px 12px 8px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text, #e9eefc);
+    background: var(--panel-solid, #121828);
+    border: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+    transform-origin: 24px 100%;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* 这两个 span 是 JS 动态创建的，拿不到 Astro 的作用域属性，必须 :global */
+  :global(.fp-say) {
+    display: block;
+    word-break: break-word;
+  }
+
+  :global(.fp-kao) {
+    display: block;
+    margin-top: 2px;
+    text-align: right;
+    white-space: nowrap;
+    opacity: 0.82;
+    font-size: 12px;
+  }
+
+  .fp-bubble.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .fp-bubble::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    bottom: -6px;
+    width: 10px;
+    height: 10px;
+    background: inherit;
+    border-right: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
+    border-bottom: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
+    transform: rotate(45deg);
+  }
+
+  .fp-close {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
+    background: var(--panel-solid, #121828);
+    color: var(--dim, #97a3c2);
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .fishpet:hover .fp-close,
+  .fp-close:focus-visible {
+    opacity: 1;
+  }
+
+  [data-theme="light"] .fp-bubble,
+  [data-theme="light"] .fp-close {
+    background: rgba(255, 255, 255, 0.96);
+    color: #24405f;
+    border-color: rgba(80, 130, 200, 0.28);
+  }
+
+  [data-theme="light"] .fp-body {
+    filter: drop-shadow(0 10px 18px rgba(40, 80, 140, 0.22));
+  }
+
+  @media (max-width: 760px) {
+    .fishpet {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fp-body img,
+    .fp-body.pop {
+      animation: none;
+    }
+    .fp-body,
+    .fp-bubble {
+      transition: none;
+    }
+  }
+</style>
