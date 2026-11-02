@@ -104,7 +104,7 @@ const mainClass = ["wrap", wide ? "wrap--post" : "", full ? "wrap--full" : ""]
 
     <header class={`site-header ${overlay ? "is-over" : ""}`}>
       <div class="inner">
-        <a class="brand" href="/">
+        <a class="brand" href="/" aria-label="大肥鱼的鱼塘首页">
           <svg width="21" height="21" viewBox="0 0 64 64" aria-hidden="true">
             <defs>
               <linearGradient id="brand-fish" x1="0" y1="0" x2="1" y2="1">
@@ -133,7 +133,7 @@ const mainClass = ["wrap", wide ? "wrap--post" : "", full ? "wrap--full" : ""]
           </svg>
           <span>大肥鱼的鱼塘</span>
         </a>
-        <nav>
+        <nav aria-label="主导航">
           {
             navItems.map((item) => (
               <a
@@ -179,12 +179,8 @@ const mainClass = ["wrap", wide ? "wrap--post" : "", full ? "wrap--full" : ""]
 
     <footer class="site-footer">
       <p>© {new Date().getFullYear()} 大肥鱼的鱼塘 · 咕噜咕噜</p>
-      <p class="credit">右上角的 ☀ / ☾ 换日间夜间，选择只存在你自己的浏览器里。</p>
       <div class="links">
         <a href="https://github.com/yexuan722/dafeiyu-blog">源码</a>
-        <a href="https://astro.build">Astro</a>
-        <a href="https://pages.cloudflare.com">Cloudflare Pages</a>
-        <a href="/about/">关于</a>
       </div>
     </footer>
 

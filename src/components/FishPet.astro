@@ -113,8 +113,7 @@ const PETS = [
       root.classList.toggle("is-hidden", hidden);
       if (!hidden) {
         show(index);
-        // 宽屏两侧有留白，开场就冒个泡；窄屏会压住正文，等点了再说
-        if (window.innerWidth >= 1100) say(PETS[index]);
+        // 保留桌宠和全部心情，点击后再说话，避免开场气泡遮住文章。
       }
     };
 
@@ -315,7 +314,13 @@ const PETS = [
     filter: drop-shadow(0 10px 18px rgba(40, 80, 140, 0.22));
   }
 
-  @media (max-width: 760px) {
+  @media (max-width: 1400px) {
+    .fishpet { left: 8px; }
+    .fp-body img { width: 80px; height: 80px; }
+  }
+
+  /* 两侧没有余量时收起桌宠，鲸鱼娘插画和名片仍保留。 */
+  @media (max-width: 1280px) {
     .fishpet {
       display: none;
     }

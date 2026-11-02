@@ -1,6 +1,8 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { fmtDate, readingMinutes, getSortedPosts } from "../../lib/post";
+import { getSortedPosts } from "../../lib/post";
+
+import PostCard from "../../components/PostCard.astro";
 
 const posts = await getSortedPosts();
 ---
@@ -19,39 +21,7 @@ const posts = await getSortedPosts();
     <ul class="post-list">
       {
         posts.map((post) => (
-          <li class="post-card">
-            <a href={`/posts/${post.id}/`}>
-              <div class="card-main">
-                <div class="card-top">
-                  <time datetime={post.data.pubDate.toISOString()}>
-                    {fmtDate(post.data.pubDate)}
-                  </time>
-                  <i class="sep" />
-                  <span>约 {readingMinutes(post.body)} 分钟</span>
-                </div>
-                <h2>{post.data.title}</h2>
-                {post.data.description && <p class="desc">{post.data.description}</p>}
-                {post.data.tags.length > 0 && (
-                  <div class="tags">
-                    {post.data.tags.map((t) => (
-                      <span class="tag">#{t}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <span class="card-go" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 5.5 16.5 12 9 18.5"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-            </a>
-          </li>
+          <PostCard post={post} />
         ))
       }
     </ul>
@@ -59,17 +29,3 @@ const posts = await getSortedPosts();
     {posts.length === 0 && <p class="empty">还一条鱼都没有，先投点鱼苗吧。</p>}
   </section>
 </Base>
-
-<script>
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  if (!reduce) {
-    for (const card of document.querySelectorAll<HTMLElement>(".post-card")) {
-      card.addEventListener("pointermove", (e) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-        card.style.setProperty("--my", `${e.clientY - rect.top}px`);
-      });
-    }
-  }
-</script>

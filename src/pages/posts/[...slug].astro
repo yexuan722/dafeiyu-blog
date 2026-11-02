@@ -43,9 +43,19 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
       <h1>{post.data.title}</h1>
 
+      {toc.length > 1 && (
+        <details class="mobile-toc">
+          <summary>文章目录 <span>{toc.length} 个章节</span></summary>
+          <nav aria-label="文章目录（移动端）">
+            <ul>{toc.map((h) => <li class={`depth-${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ul>
+          </nav>
+        </details>
+      )}
+
       <div class="post-body">
         <Content />
       </div>
+      <div class="post-end"><a href="/posts/">← 返回文章列表</a><span>这次的坑，先记到这里。咕噜咕噜。</span></div>
     </article>
 
     {
@@ -87,7 +97,8 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
 
   toTop?.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "instant" : "smooth" });
   });
 
   // 目录高亮

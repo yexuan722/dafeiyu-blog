@@ -146,26 +146,27 @@ const posts = await getSortedPosts();
     results.innerHTML = matched
       .map((doc) => {
         const tags = doc.tags
-          .map((t) => `<span class="tag">#${esc(t)}</span>`)
+          .slice(0, 3)
+          .map((t) => `<a class="tag" href="/tags/?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`)
           .join("");
         // 正文里有命中就摘正文，否则用摘要
         const bodyHit = terms.some((t) =>
           doc.body.toLowerCase().includes(t.toLowerCase()),
         );
         return `<li class="result">
-          <a href="/posts/${doc.id}/">
+          <div class="result-main">
             <div class="result-top">
               <time datetime="${doc.date}">${doc.date}</time>
               <i class="sep"></i>
               <span>约 ${doc.minutes} 分钟</span>
             </div>
-            <h2>${highlight(doc.title, terms)}</h2>
+            <h2><a class="result-title-link" href="/posts/${doc.id}/">${highlight(doc.title, terms)}</a></h2>
             <p class="result-desc">${highlight(
               excerpt(bodyHit ? doc.body : doc.description || doc.body, terms),
               terms,
             )}</p>
             <div class="tags">${tags}</div>
-          </a>
+          </div>
         </li>`;
       })
       .join("");

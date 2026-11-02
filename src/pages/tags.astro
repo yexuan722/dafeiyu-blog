@@ -1,6 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import { fmtDate, readingMinutes, getSortedPosts, tagCounts } from "../lib/post";
+import { getSortedPosts, tagCounts } from "../lib/post";
+
+import PostCard from "../components/PostCard.astro";
 
 const posts = await getSortedPosts();
 const tags = tagCounts(posts);
@@ -36,44 +38,12 @@ const tags = tagCounts(posts);
       }
     </div>
 
-    <p class="filter-status" id="status">共 {posts.length} 篇</p>
+    <p class="filter-status" id="status" aria-live="polite">共 {posts.length} 篇</p>
 
     <ul class="post-list" id="list">
       {
         posts.map((post) => (
-          <li class="post-card" data-post data-tags={post.data.tags.join("|")}>
-            <a href={`/posts/${post.id}/`}>
-              <div class="card-main">
-                <div class="card-top">
-                  <time datetime={post.data.pubDate.toISOString()}>
-                    {fmtDate(post.data.pubDate)}
-                  </time>
-                  <i class="sep" />
-                  <span>约 {readingMinutes(post.body)} 分钟</span>
-                </div>
-                <h2>{post.data.title}</h2>
-                {post.data.description && <p class="desc">{post.data.description}</p>}
-                {post.data.tags.length > 0 && (
-                  <div class="tags">
-                    {post.data.tags.map((t) => (
-                      <span class="tag">#{t}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <span class="card-go" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 5.5 16.5 12 9 18.5"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-            </a>
-          </li>
+          <PostCard post={post} filterable />
         ))
       }
     </ul>
@@ -88,11 +58,14 @@ const tags = tagCounts(posts);
   const status = document.getElementById("status");
   const empty = document.getElementById("empty");
 
+  let selectedTag = "";
+
   function apply(tag: string) {
+    selectedTag = tag;
     let shown = 0;
 
     for (const card of cards) {
-      const tags = (card.dataset.tags ?? "").split("|");
+      const tags = JSON.parse(card.dataset.tags ?? "[]") as string[];
       const visible = !tag || tags.includes(tag);
       card.hidden = !visible;
       if (visible) shown += 1;
@@ -104,7 +77,9 @@ const tags = tagCounts(posts);
     if (empty) empty.hidden = shown > 0;
 
     for (const pill of pills) {
-      pill.classList.toggle("is-active", (pill.dataset.tag ?? "") === tag);
+      const active = (pill.dataset.tag ?? "") === tag;
+      pill.classList.toggle("is-active", active);
+      pill.setAttribute("aria-pressed", String(active));
     }
 
     const url = new URL(location.href);
@@ -114,7 +89,10 @@ const tags = tagCounts(posts);
   }
 
   for (const pill of pills) {
-    pill.addEventListener("click", () => apply(pill.dataset.tag ?? ""));
+    pill.addEventListener("click", () => {
+      const tag = pill.dataset.tag ?? "";
+      apply(selectedTag === tag ? "" : tag);
+    });
   }
 
   apply(new URLSearchParams(location.search).get("tag") ?? "");

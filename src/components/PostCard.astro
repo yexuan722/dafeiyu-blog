@@ -1,0 +1,24 @@
+---
+import { fmtDate, readingMinutes, type Post } from "../lib/post";
+interface Props { post: Post; filterable?: boolean; }
+const { post, filterable = false } = Astro.props;
+---
+
+<li class="post-card" data-post={filterable || undefined} data-tags={filterable ? JSON.stringify(post.data.tags) : undefined}>
+  <div class="card-main">
+    <div class="card-top">
+      <time datetime={post.data.pubDate.toISOString()}>{fmtDate(post.data.pubDate)}</time>
+      <i class="sep" aria-hidden="true" />
+      <span>约 {readingMinutes(post.body)} 分钟</span>
+    </div>
+    <h2><a class="post-title-link" href={`/posts/${post.id}/`}>{post.data.title}</a></h2>
+    {post.data.description && <p class="desc">{post.data.description}</p>}
+    {post.data.tags.length > 0 && (
+      <div class="tags" aria-label="文章标签">
+        {post.data.tags.slice(0, 3).map((tag) => (
+          <a class="tag" href={`/tags/?tag=${encodeURIComponent(tag)}`}>#{tag}</a>
+        ))}
+      </div>
+    )}
+  </div>
+</li>
