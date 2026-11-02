@@ -34,7 +34,23 @@ const PETS = [
   </button>
 
   <button class="fp-close" id="fpClose" type="button" aria-label="把大肥鱼收起来">✕</button>
+
+  <button class="fp-mini" id="fpMini" type="button" aria-label="把大肥鱼叫回来" title="把大肥鱼叫回来">
+    🐟
+  </button>
 </div>
+
+<!-- 在首次绘制前就把「收起」状态贴上，否则会先闪一下再消失 -->
+<script is:inline>
+  (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("fishpet-state") || "{}");
+      if (saved && saved.hidden === true) {
+        document.getElementById("fishpet")?.classList.add("is-hidden");
+      }
+    } catch {}
+  })();
+</script>
 
 <script is:inline define:vars={{ PETS }}>
   (() => {
@@ -45,6 +61,7 @@ const PETS = [
     const img = document.getElementById("fpImg");
     const bubble = document.getElementById("fpBubble");
     const close = document.getElementById("fpClose");
+    const mini = document.getElementById("fpMini");
     const STORE_KEY = "fishpet-state";
     const POS_KEY = "fishpet-pos";
 
@@ -221,6 +238,17 @@ const PETS = [
       root.classList.add("is-hidden");
     });
 
+    // 收起之后还能叫回来，不然就只能清 localStorage 了
+    mini?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      hidden = false;
+      save();
+      root.classList.remove("is-hidden");
+      show(index);
+      pop();
+      say(PETS[index]);
+    });
+
     body.addEventListener("animationend", () => body.classList.remove("pop"));
 
     requestAnimationFrame(() => {
@@ -246,7 +274,7 @@ const PETS = [
     width: var(--size);
     height: var(--size);
     z-index: 30;
-    transform: translate3d(var(--pet-x, 18px), var(--pet-y, 0px), 0);
+    transform: translate3d(var(--pet-x, 18px), var(--pet-y, calc(100vh - 152px)), 0);
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -254,9 +282,45 @@ const PETS = [
     transition: opacity 0.25s ease;
   }
 
+  /* 收起不是消失：缩成一枚小鱼图标，点一下能叫回来 */
   .fishpet.is-hidden {
-    opacity: 0;
     pointer-events: none;
+  }
+
+  .fishpet.is-hidden > .fp-body,
+  .fishpet.is-hidden > .fp-bubble,
+  .fishpet.is-hidden > .fp-close {
+    display: none;
+  }
+
+  .fishpet.is-hidden > .fp-mini {
+    display: grid;
+    pointer-events: auto;
+  }
+
+  .fp-mini {
+    display: none;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
+    background: var(--panel-solid, #121828);
+    color: var(--accent, #8fc0ff);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .fp-mini:hover {
+    opacity: 1;
+    transform: scale(1.08);
   }
 
   .fp-body {
@@ -417,10 +481,10 @@ const PETS = [
 
   .fp-close {
     position: absolute;
-    top: -6px;
-    right: -8px;
-    width: 20px;
-    height: 20px;
+    top: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
     background: var(--panel-solid, #121828);
@@ -438,7 +502,8 @@ const PETS = [
   }
 
   [data-theme="light"] .fp-bubble,
-  [data-theme="light"] .fp-close {
+  [data-theme="light"] .fp-close,
+  [data-theme="light"] .fp-mini {
     background: rgba(255, 255, 255, 0.96);
     color: #24405f;
     border-color: rgba(80, 130, 200, 0.28);
