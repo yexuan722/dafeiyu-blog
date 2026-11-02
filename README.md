@@ -137,11 +137,17 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
   源素材是表情包里的 GIF，用 Pillow 转成 **240×240 动图 WebP**（`public/pet/*.webp`）：
   **16.3MB → 1.79MB**，超过 36 帧的会等差抽帧，单张 130–320KB。
 - **点一下就换一只**：换图 + 冒气泡 + `fp-pop` 的 q 弹动画（压扁→回弹，带过冲）。
+- **可以拖着走**：`pointerdown/move/up` + `setPointerCapture`，位置存 `localStorage["fishpet-pos"]`。
+  - 位移超过 5px 才算拖动，松手不会误触发「换一只」（`suppressClick` 标记）。
+  - 松手夹取到视口内（四边各留 8px），窗口 resize 时再夹一次。
+  - 贴到上沿（`y < 160`）气泡翻到鱼下面；拖到右半边气泡改右对齐，不会顶出屏幕。
+  - 拖动时 `cursor: grabbing`、暂停浮动动画、关掉 hover 位移。
 - 气泡拆两行：正文 + 颜文字右对齐，避免 `(╬ Ò﹏Ó)` 被折成两截。
+  **必须写 `width: max-content`**，否则绝对定位在只有鱼宽的父级里会被压成窄柱。
 - 状态存 `localStorage["fishpet-state"]`，刷新后还是上次那只；`/#pet-3` 可以直接定格某一只。
 - 首屏只加载当前这张，`requestIdleCallback` 里再预热其它；点过之后 1.2 秒再预热一轮。
 - 尊重 `prefers-reduced-motion`（关掉浮动和弹跳）和 `saveData` / 2G（不预热）。
-- 1280px 以下收起；1281–1400px 缩为 80px，宽屏保留 120px。开场不冒泡，
+- 1024px 以下收起；1025–1400px 缩为 92px，宽屏 120px。开场不冒泡，
   点击才说话，避免遮住文章。首页鲸鱼娘插画不受这个断点影响。
 
 ## 主题（日间 / 夜间）
