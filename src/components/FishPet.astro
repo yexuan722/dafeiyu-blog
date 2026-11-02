@@ -1,5 +1,5 @@
 ---
-// 桌宠：点一下就换一只大肥鱼，气泡里说她现在的心情。
+// 桌宠：可以拖着跑，点一下换一只。
 // 7 张动图都是压缩过的 animated webp（240×240，单张 130–320KB，懒加载）。
 const PETS = [
   { src: "/pet/working.webp", alt: "正在干活的大肥鱼", mood: "干活中", text: "本鱼在认真干活哦～今天也要好好吃饭呀", kao: "(๑•̀ㅂ•́)و✧" },
@@ -15,7 +15,13 @@ const PETS = [
 <div class="fishpet" id="fishpet" data-count={PETS.length}>
   <div class="fp-bubble" id="fpBubble" role="status" aria-live="polite"></div>
 
-  <button class="fp-body" id="fpBody" type="button" aria-label="戳一下大肥鱼，换个心情">
+  <button
+    class="fp-body"
+    id="fpBody"
+    type="button"
+    aria-label="点一下换心情，按住可以拖动"
+    title="点一下换心情，按住能拖着走"
+  >
     <img
       id="fpImg"
       src={PETS[0].src}
@@ -40,6 +46,7 @@ const PETS = [
     const bubble = document.getElementById("fpBubble");
     const close = document.getElementById("fpClose");
     const STORE_KEY = "fishpet-state";
+    const POS_KEY = "fishpet-pos";
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const conn = navigator.connection || {};
@@ -48,6 +55,15 @@ const PETS = [
     let index = 0;
     let hidden = false;
     let bubbleTimer = 0;
+    let suppressClick = false;
+
+    // 位置（左上角，px）
+    let pos = { x: 18, y: 0 };
+    let dragging = false;
+    let moved = false;
+    let start = { x: 0, y: 0, px: 0, py: 0 };
+
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
@@ -62,6 +78,12 @@ const PETS = [
     const save = () => {
       try {
         localStorage.setItem(STORE_KEY, JSON.stringify({ index, hidden }));
+      } catch {}
+    };
+
+    const savePos = () => {
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(pos));
       } catch {}
     };
 
@@ -109,15 +131,80 @@ const PETS = [
       body.classList.add("pop");
     };
 
-    const apply = () => {
-      root.classList.toggle("is-hidden", hidden);
-      if (!hidden) {
-        show(index);
-        // 保留桌宠和全部心情，点击后再说话，避免开场气泡遮住文章。
+    // ---------------- 位置与拖拽 ----------------
+
+    const place = (x, y) => {
+      const rect = root.getBoundingClientRect();
+      const maxX = Math.max(8, window.innerWidth - rect.width - 8);
+      const maxY = Math.max(8, window.innerHeight - rect.height - 8);
+      pos = { x: clamp(x, 8, maxX), y: clamp(y, 8, maxY) };
+      root.style.setProperty("--pet-x", `${pos.x}px`);
+      root.style.setProperty("--pet-y", `${pos.y}px`);
+      // 贴到上沿时气泡翻到下面，贴右边时气泡靠右对齐
+      root.classList.toggle("flip", pos.y < 160);
+      root.classList.toggle("at-right", pos.x + rect.width / 2 > window.innerWidth / 2);
+    };
+
+    const restorePos = () => {
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem(POS_KEY) || "null");
+      } catch {}
+      if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
+        place(saved.x, saved.y);
+        return;
+      }
+      const rect = root.getBoundingClientRect();
+      place(18, window.innerHeight - rect.height - 14);
+    };
+
+    body.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      dragging = true;
+      moved = false;
+      start = { x: event.clientX, y: event.clientY, px: pos.x, py: pos.y };
+      try {
+        body.setPointerCapture(event.pointerId);
+      } catch {}
+      root.classList.add("dragging");
+    });
+
+    body.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (!moved && Math.hypot(dx, dy) > 5) moved = true;
+      if (!moved) return;
+      place(start.px + dx, start.py + dy);
+    });
+
+    const endDrag = (event) => {
+      if (!dragging) return;
+      dragging = false;
+      root.classList.remove("dragging");
+      try {
+        body.releasePointerCapture(event.pointerId);
+      } catch {}
+      if (moved) {
+        // 拖完别把这一次当成点击，不然一松手就换一只
+        suppressClick = true;
+        window.setTimeout(() => (suppressClick = false), 0);
+        savePos();
       }
     };
 
+    body.addEventListener("pointerup", endDrag);
+    body.addEventListener("pointercancel", endDrag);
+
+    window.addEventListener("resize", () => place(pos.x, pos.y), { passive: true });
+
+    // ---------------- 点击 / 收起 ----------------
+
     body.addEventListener("click", () => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
       hidden = false;
       show(index + 1);
       pop();
@@ -136,7 +223,11 @@ const PETS = [
 
     body.addEventListener("animationend", () => body.classList.remove("pop"));
 
-    apply();
+    requestAnimationFrame(() => {
+      restorePos();
+      root.classList.toggle("is-hidden", hidden);
+      if (!hidden) show(index);
+    });
 
     // 首屏先不抢带宽，闲下来再预热
     if (!frugal) {
@@ -148,50 +239,64 @@ const PETS = [
 
 <style>
   .fishpet {
+    --size: 120px;
     position: fixed;
-    left: 18px;
-    bottom: 14px;
+    left: 0;
+    top: 0;
+    width: var(--size);
+    height: var(--size);
     z-index: 30;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transform: translate3d(var(--pet-x, 18px), var(--pet-y, 0px), 0);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    will-change: transform;
+    transition: opacity 0.25s ease;
   }
 
   .fishpet.is-hidden {
     opacity: 0;
-    transform: translateY(12px) scale(0.9);
     pointer-events: none;
   }
 
   .fp-body {
-    position: relative;
     display: block;
+    width: 100%;
+    height: 100%;
     padding: 0;
     border: 0;
     background: none;
-    cursor: pointer;
+    cursor: grab;
     line-height: 0;
     filter: drop-shadow(0 10px 18px rgba(6, 18, 40, 0.45));
     transform-origin: 50% 88%;
     transition: transform 0.18s ease;
   }
 
-  .fp-body:hover {
-    transform: translateY(-3px) rotate(-2deg) scale(1.04);
+  .fishpet.dragging .fp-body {
+    cursor: grabbing;
+    transition: none;
   }
 
-  .fp-body:active {
-    transform: scale(0.96);
+  .fp-body:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  .fishpet.dragging .fp-body:hover {
+    transform: none;
   }
 
   .fp-body img {
-    width: 120px;
-    height: 120px;
+    width: 100%;
+    height: 100%;
     display: block;
     image-rendering: auto;
+    pointer-events: none; /* 拖拽事件统一由按钮接 */
     animation: fp-float 4.2s ease-in-out infinite;
+  }
+
+  .fishpet.dragging .fp-body img {
+    animation-play-state: paused;
   }
 
   /* q 弹：先压扁再回弹，带一点过冲 */
@@ -230,9 +335,14 @@ const PETS = [
     }
   }
 
+  /* 气泡绝对定位在鱼上方，不参与布局，拖动时不会把鱼挤歪 */
   .fp-bubble {
-    position: relative;
-    max-width: 236px;
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 10px);
+    /* 父级只有鱼那么宽，不写 max-content 的话气泡会被压成一条窄柱 */
+    width: max-content;
+    max-width: min(236px, calc(100vw - 24px));
     padding: 9px 12px 8px;
     border-radius: 14px;
     font-size: 12.5px;
@@ -246,21 +356,6 @@ const PETS = [
     transform-origin: 24px 100%;
     pointer-events: none;
     transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  /* 这两个 span 是 JS 动态创建的，拿不到 Astro 的作用域属性，必须 :global */
-  :global(.fp-say) {
-    display: block;
-    word-break: break-word;
-  }
-
-  :global(.fp-kao) {
-    display: block;
-    margin-top: 2px;
-    text-align: right;
-    white-space: nowrap;
-    opacity: 0.82;
-    font-size: 12px;
   }
 
   .fp-bubble.show {
@@ -279,6 +374,45 @@ const PETS = [
     border-right: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
     border-bottom: 1px solid var(--line-strong, rgba(140, 165, 220, 0.3));
     transform: rotate(45deg);
+  }
+
+  /* 贴近视口上沿：气泡翻到鱼下面 */
+  .fishpet.flip .fp-bubble {
+    bottom: auto;
+    top: calc(100% + 10px);
+    transform-origin: 24px 0;
+  }
+
+  .fishpet.flip .fp-bubble::after {
+    bottom: auto;
+    top: -6px;
+    transform: rotate(225deg);
+  }
+
+  /* 拖到右半边：气泡改成右对齐，别顶出屏幕 */
+  .fishpet.at-right .fp-bubble {
+    left: auto;
+    right: 0;
+  }
+
+  .fishpet.at-right .fp-bubble::after {
+    left: auto;
+    right: 22px;
+  }
+
+  /* 这两个 span 是 JS 动态创建的，拿不到 Astro 的作用域属性，必须 :global */
+  :global(.fp-say) {
+    display: block;
+    word-break: break-word;
+  }
+
+  :global(.fp-kao) {
+    display: block;
+    margin-top: 2px;
+    text-align: right;
+    white-space: nowrap;
+    opacity: 0.82;
+    font-size: 12px;
   }
 
   .fp-close {
@@ -315,12 +449,13 @@ const PETS = [
   }
 
   @media (max-width: 1400px) {
-    .fishpet { left: 8px; }
-    .fp-body img { width: 80px; height: 80px; }
+    .fishpet {
+      --size: 92px;
+    }
   }
 
-  /* 两侧没有余量时收起桌宠，鲸鱼娘插画和名片仍保留。 */
-  @media (max-width: 1280px) {
+  /* 太窄就收起来，桌面宠在手机上只会挡路 */
+  @media (max-width: 1024px) {
     .fishpet {
       display: none;
     }
