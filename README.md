@@ -81,7 +81,7 @@ Cloudflare Pages 连上这个仓库后会自动构建并上线。
 │   ├── hero-dark.webp       # 同一张图的夜间版，73KB
 │   ├── hero-2x.webp         # 141KB，高分屏（≥1.5 倍）用的 2880×1607
 │   ├── hero-dark-2x.webp    # 103KB，同上，夜间版
-│   ├── avatar.webp          # 从日间图裁的头像 288×288（15KB）
+│   ├── avatar.webp          # 头像：Q 版鲸鱼娘，透明底 320×320（31KB）
 │   └── og.jpg               # 社交卡片图 1200×630
 └── src/
     ├── content.config.ts    # 文章集合 schema
